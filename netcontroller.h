@@ -20,14 +20,14 @@ public:
     void setUsername(QByteArray newName) { username = newName; }
     void setPassword(QByteArray newPass) { password = newPass; }
 
-    enum Status {Offline, Online, Disconnected};
+    enum Status {Unknown, Offline, Online, Disconnected};
 
 private:
     QString checkUrl = "http://ipgw.neu.edu.cn/include/auth_action.php";
     QString loginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
-    Status NEUStatus, flag;
+    Status NEUStatus = Unknown, flag = Unknown;
 
     QNetworkAccessManager manager;
     QNetworkRequest request;
