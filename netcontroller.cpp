@@ -2,7 +2,7 @@
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
             username(id), password(passwd), flag(Disconnected), manager(this), checkTimer(new QTimer(this))
-{
+{    
     checkParam.append("action=get_online_info");
 
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");

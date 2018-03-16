@@ -32,7 +32,6 @@ private:
     QNetworkAccessManager manager;
     QNetworkRequest request;
     QTimer *checkTimer;
-
 signals:
     void getOnline();
     void getOffline();

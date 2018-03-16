@@ -1,14 +1,16 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QWidget *parent) : QWidget(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : QWidget(parent)
 {
     vlayout = new QVBoxLayout(this);
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
 
     idEdit = new QLineEdit(this);
+    idEdit->setText(id);
     passwordEdit = new QLineEdit(this);
     passwordEdit->setEchoMode(QLineEdit::Password);
+    passwordEdit->setText(pass);
 
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);

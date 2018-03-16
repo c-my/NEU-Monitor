@@ -7,6 +7,7 @@
 #include <QAction>
 #include <netcontroller.h>
 #include <optionswindow.h>
+#include <QSettings>
 
 class MainTray: public QSystemTrayIcon
 {
@@ -18,7 +19,9 @@ private:
     QMenu *menu;
     QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *quitAction;
     NetController *netctrl;
+    QSettings settings;
     OptionsWindow opWindow;
+
     bool isAutoLogin = true;
     void handleActivated(QSystemTrayIcon::ActivationReason reason);
     void showOptions();

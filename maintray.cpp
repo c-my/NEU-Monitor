@@ -1,12 +1,16 @@
 #include "maintray.h"
 
-MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent), menu(new QMenu()),
+MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent),
+    menu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
+    opWindow(settings.value("id",0).toByteArray(), settings.value("password", 0).toByteArray()),
     user(username),passwd(password)
 {
     opWindow.hide();
     setIcon(QIcon(tr(":/icon/favicon.ico")));
 
     netctrl = new NetController(user,passwd,this);
+    netctrl->setUsername(settings.value("id",0).toByteArray());
+    netctrl->setPassword(settings.value("password", 0).toByteArray());
 
     connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
     //发送通知
@@ -75,5 +79,7 @@ void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
     netctrl->setPassword(pass);
     opWindow.hide();
     netctrl->sendLoginRequest();
+    settings.setValue("id", id);
+    settings.setValue("password", pass);
 }
 

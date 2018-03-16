@@ -6,12 +6,13 @@
 #include <QPushButton>
 #include <QFormLayout>
 #include <QVBoxLayout>
+#include <QSettings>
 
 class OptionsWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit OptionsWindow(QWidget *parent = nullptr);
+    explicit OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent = nullptr);
 
 private:
     QLineEdit *idEdit, *passwordEdit;
