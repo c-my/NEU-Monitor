@@ -14,6 +14,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : 
 
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
+    layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
     cancleButton = new QPushButton("取消", this);
@@ -22,6 +23,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : 
 
     vlayout->addLayout(layout);
     vlayout->addLayout(hlayout);
+    vlayout->setSpacing(20);
 
     setLayout(vlayout);
 
