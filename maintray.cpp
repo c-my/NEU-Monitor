@@ -3,10 +3,13 @@
 MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent), menu(new QMenu()),
     user(username),passwd(password)
 {
+    opWindow.hide();
     setIcon(QIcon(tr(":/icon/favicon.ico")));
 
     netctrl = new NetController(user,passwd,this);
 
+    connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
+    //发送通知
     connect(netctrl, NetController::getOnline, this, [this](){
         showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);});
     connect(netctrl, NetController::getOffline, this, [this](){
@@ -33,7 +36,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         isAutoLogin = set;
         netctrl->sendLoginRequest();
     });
-//    connect(optionsAction, QAction::triggered, this, [this]());
+    connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
     connect(quitAction, QAction::triggered, this,[this](){emit exit();});
 
     autoLogin->setChecked(true);
@@ -41,6 +44,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     menu->addAction(loginAction);
     menu->addAction(logoutAction);
     menu->addAction(autoLogin);
+    menu->addAction(optionsAction);
     menu->addAction(quitAction);
 
     setContextMenu(menu);
@@ -58,5 +62,18 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
     default:
         break;
     }
+}
+
+void MainTray::showOptions()
+{
+    opWindow.show();
+}
+
+void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
+{
+    netctrl->setUsername(id);
+    netctrl->setPassword(pass);
+    opWindow.hide();
+    netctrl->sendLoginRequest();
 }
 

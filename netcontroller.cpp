@@ -5,24 +5,6 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
 {
     checkParam.append("action=get_online_info");
 
-    loginParam.append("action=login&");
-    loginParam.append("nas_ip=&");
-    loginParam.append("password=");
-    loginParam.append(password);
-    loginParam.append("&save_me=0&");
-    loginParam.append("url=&");
-    loginParam.append("user_ip=&");
-    loginParam.append("user_mac=&");
-    loginParam.append("username=");
-    loginParam.append(username);
-
-    logoutParam.append("action=logout&");
-    logoutParam.append("ajax=1&");
-    logoutParam.append("password=");
-    logoutParam.append(password);
-    logoutParam.append("&username=");
-    logoutParam.append(username);
-
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     connect(&manager, QNetworkAccessManager::finished, this, handleResponse);
 
@@ -60,12 +42,34 @@ void NetController::sendCheckRequest()
 void NetController::sendLoginRequest()
 {
     request.setUrl(QUrl(loginUrl));
+
+    QByteArray loginParam;
+    loginParam.append("action=login&");
+    loginParam.append("nas_ip=&");
+    loginParam.append("password=");
+    loginParam.append(password);
+    loginParam.append("&save_me=0&");
+    loginParam.append("url=&");
+    loginParam.append("user_ip=&");
+    loginParam.append("user_mac=&");
+    loginParam.append("username=");
+    loginParam.append(username);
+
     manager.post(request, loginParam);
 }
 
 void NetController::sendLogoutRequest()
 {
     request.setUrl(QUrl(loginUrl));
+
+    QByteArray logoutParam;
+    logoutParam.append("action=logout&");
+    logoutParam.append("ajax=1&");
+    logoutParam.append("password=");
+    logoutParam.append(password);
+    logoutParam.append("&username=");
+    logoutParam.append(username);
+
     manager.post(request, logoutParam);
 }
 

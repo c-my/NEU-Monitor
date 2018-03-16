@@ -27,11 +27,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
     netcontroller.cpp \
-    maintray.cpp
+    maintray.cpp \
+    optionswindow.cpp
 
 HEADERS += \
     netcontroller.h \
-    maintray.h
+    maintray.h \
+    optionswindow.h
 
 RESOURCES += \
     resource.qrc
