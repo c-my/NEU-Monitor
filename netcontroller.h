@@ -32,9 +32,10 @@ private:
     QNetworkAccessManager manager;
     QNetworkRequest request;
     QTimer *checkTimer;
+    bool isForceLogout = false;
 signals:
     void getOnline();
-    void getOffline();
+    void getOffline(bool isForce);
     void getDisconnected();
 
 public slots:

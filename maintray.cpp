@@ -16,9 +16,9 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     //发送通知
     connect(netctrl, NetController::getOnline, this, [this](){
         showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);});
-    connect(netctrl, NetController::getOffline, this, [this](){
+    connect(netctrl, NetController::getOffline, this, [this](bool isForce){
         showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-        if(isAutoLogin){
+        if(!isForce && isAutoLogin){
             qDebug()<<isAutoLogin;
             netctrl->sendLoginRequest();
         }

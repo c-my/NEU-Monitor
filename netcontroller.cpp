@@ -19,7 +19,8 @@ void NetController::checkStatus()
     if(NEUStatus==Offline&&flag!=Offline)
     {
         flag = Offline;
-        emit getOffline();
+        emit getOffline(isForceLogout);
+        isForceLogout = false;
     }
     else if(NEUStatus == Online && flag != Online)
     {
@@ -41,6 +42,7 @@ void NetController::sendCheckRequest()
 
 void NetController::sendLoginRequest()
 {
+    isForceLogout = true;
     request.setUrl(QUrl(loginUrl));
 
     QByteArray loginParam;
