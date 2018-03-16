@@ -38,19 +38,16 @@ void NetController::checkStatus()
     {
         flag = Offline;
         emit getOffline();
-        qDebug()<<"turn Offline";
     }
     else if(NEUStatus == Online && flag != Online)
     {
         flag = Online;
         emit getOnline();
-        qDebug()<<"turn Online";
     }
     else if(NEUStatus == Disconnected && flag != Disconnected)
     {
         flag = Disconnected;
         emit getDisconnected();
-        qDebug()<<"turn Disconnected";
     }
 }
 
