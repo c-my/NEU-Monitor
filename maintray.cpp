@@ -22,13 +22,18 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     loginAction = new QAction(tr("连接网络"),this);
     logoutAction = new QAction(tr("断开网络"),this);
     autoLogin = new QAction(tr("自动重连"), this);
+    optionsAction = new QAction(tr("设置"), this);
     quitAction = new QAction(tr("退出"), this);
 
     autoLogin->setCheckable(true);
 
     connect(loginAction, QAction::triggered, this,[this](){netctrl->sendLoginRequest();});
     connect(logoutAction, QAction::triggered, this,[this](){netctrl->sendLogoutRequest();});
-    connect(autoLogin, QAction::toggled, this, handleAutoLogin);
+    connect(autoLogin, QAction::toggled, this, [this](bool set){
+        isAutoLogin = set;
+        netctrl->sendLoginRequest();
+    });
+//    connect(optionsAction, QAction::triggered, this, [this]());
     connect(quitAction, QAction::triggered, this,[this](){emit exit();});
 
     autoLogin->setChecked(true);
@@ -54,10 +59,4 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
         break;
     }
 }
-
-void MainTray::handleAutoLogin(bool set)
-{
-    isAutoLogin = set;
-}
-
 

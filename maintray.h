@@ -15,7 +15,7 @@ public:
 
 private:
     QMenu *menu;
-    QAction *loginAction, *logoutAction,*autoLogin, *quitAction;
+    QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *quitAction;
     NetController *netctrl;
     bool isAutoLogin = true;
     void handleActivated(QSystemTrayIcon::ActivationReason reason);
@@ -27,7 +27,7 @@ signals:
     void exit();
 
 private slots:
-    void handleAutoLogin(bool set);
+
 };
 
 #endif // MAINTRAY_H
