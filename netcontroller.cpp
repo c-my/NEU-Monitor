@@ -1,0 +1,103 @@
+#include "netcontroller.h"
+
+NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
+            username(id), password(passwd), flag(Disconnected), manager(this), checkTimer(new QTimer(this))
+{
+    checkParam.append("action=get_online_info");
+
+    loginParam.append("action=login&");
+    loginParam.append("nas_ip=&");
+    loginParam.append("password=");
+    loginParam.append(password);
+    loginParam.append("&save_me=0&");
+    loginParam.append("url=&");
+    loginParam.append("user_ip=&");
+    loginParam.append("user_mac=&");
+    loginParam.append("username=");
+    loginParam.append(username);
+
+    logoutParam.append("action=logout&");
+    logoutParam.append("ajax=1&");
+    logoutParam.append("password=");
+    logoutParam.append(password);
+    logoutParam.append("&username=");
+    logoutParam.append(username);
+
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    connect(&manager, QNetworkAccessManager::finished, this, handleResponse);
+
+    checkTimer->setInterval(1000);
+    connect(checkTimer, QTimer::timeout, this, checkStatus);
+    checkTimer->start();
+}
+
+void NetController::checkStatus()
+{
+    sendCheckRequest();
+    if(NEUStatus==Offline&&flag!=Offline)
+    {
+        flag = Offline;
+        emit getOffline();
+        qDebug()<<"turn Offline";
+    }
+    else if(NEUStatus == Online && flag != Online)
+    {
+        flag = Online;
+        emit getOnline();
+        qDebug()<<"turn Online";
+    }
+    else if(NEUStatus == Disconnected && flag != Disconnected)
+    {
+        flag = Disconnected;
+        emit getDisconnected();
+        qDebug()<<"turn Disconnected";
+    }
+}
+
+void NetController::sendCheckRequest()
+{
+    request.setUrl(QUrl(checkUrl));
+    manager.post(request, checkParam);
+}
+
+void NetController::sendLoginRequest()
+{
+    request.setUrl(QUrl(loginUrl));
+    manager.post(request, loginParam);
+}
+
+void NetController::sendLogoutRequest()
+{
+    request.setUrl(QUrl(loginUrl));
+    manager.post(request, logoutParam);
+}
+
+void NetController::handleResponse(QNetworkReply *reply)
+{
+    //    qDebug()<<reply->url();
+    QString url = reply->url().toString();
+    reply->deleteLater();
+    if(url==checkUrl)
+    {
+        if(reply->error()==QNetworkReply::NoError)
+        {
+            QString status = reply->readAll();
+            if(status==offlineString)
+            {
+                NEUStatus = Offline;
+            }
+            else
+            {
+                NEUStatus = Online;
+            }
+        }
+        else
+        {
+            NEUStatus = Disconnected;
+        }
+    }
+    else if(url==loginUrl)
+    {
+
+    }
+}
