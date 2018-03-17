@@ -57,12 +57,13 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     });
     connect(autoLogin, QAction::toggled, this, [this](bool set){
         isAutoLogin = set;
+        settings.setValue("isAutoLogin", set);
     });
     connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
     connect(aboutAction, QAction::triggered, this, showAbout);
     connect(quitAction, QAction::triggered, this,[this](){emit exit();});
 
-    autoLogin->setChecked(true);
+    autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
 
     infoMenu->setTitle("账户信息");
     infoMenu->addAction(mbAction);
