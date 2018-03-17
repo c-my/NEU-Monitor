@@ -135,7 +135,7 @@ void MainTray::showAbout()
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                              "<p>Based on Qt 5.10.0 (MinGW 5.3.0, 32bit)</p>"
-                             "Source Code: <a href=\"https://github.com/TurnMeOn/NEU-Dectect\">https://github.com/TurnMeOn/NEU-Dectect</a><br/>"
+                             "Source Code: <a href=\"https://github.com/TurnMeOn/NEU-Monitor\">https://github.com/TurnMeOn/NEU-Monitor</a><br/>"
                             "Email: <address>"
                             "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">TurnMeOn</a>"
                             "</address>"));

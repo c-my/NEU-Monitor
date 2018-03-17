@@ -37,3 +37,5 @@ HEADERS += \
 
 RESOURCES += \
     resource.qrc
+
+RC_ICONS = favicon.ico
