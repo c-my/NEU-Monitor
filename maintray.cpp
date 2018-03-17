@@ -133,7 +133,7 @@ void MainTray::showAbout()
 {
     QMessageBox *aboutWindow = new QMessageBox();
     aboutWindow->setStandardButtons(QMessageBox::Ok);
-    aboutWindow->setText(tr("<h1>NEU-Dectect</h1>"
+    aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                              "<p>Based on Qt 5.10.0 (MinGW 5.3.0, 32bit)</p>"
                              "Source Code: <a href=\"https://github.com/TurnMeOn/NEU-Dectect\">https://github.com/TurnMeOn/NEU-Dectect</a><br/>"
                             "Email: <address>"
