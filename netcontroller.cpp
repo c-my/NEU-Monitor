@@ -92,6 +92,8 @@ void NetController::handleResponse(QNetworkReply *reply)
             else
             {
                 NEUStatus = Online;
+                QStringList infoList = status.split(',');
+                emit sendInfo(infoList[0], infoList[1], infoList[2], infoList[5]);
             }
         }
         else

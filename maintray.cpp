@@ -1,10 +1,11 @@
 #include "maintray.h"
 
 MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent),
-    menu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
+    menu(new QMenu()),infoMenu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
     opWindow(settings.value("id",0).toByteArray(), settings.value("password", 0).toByteArray()),
     user(username),passwd(password)
 {
+
     opWindow.hide();
     setIcon(QIcon(tr(":/icon/favicon.ico")));
 
@@ -15,22 +16,33 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
     //发送通知
     connect(netctrl, NetController::getOnline, this, [this](){
-        showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);});
+        showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
+        currentState = Online;
+        setToolTip(tr("当前状态：连接"));
+    });
     connect(netctrl, NetController::getOffline, this, [this](bool isForce){
         showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-        if(!isForce && isAutoLogin){
-            qDebug()<<isAutoLogin;
-            netctrl->sendLoginRequest();
+        currentState = Offline;
+        setToolTip(tr("当前状态：断开"));
+        isForceLogout = isForce;
         }
-    });
+    );
     connect(netctrl, NetController::getDisconnected, this, [this](){
-        showMessage(tr("无法连接至校园网"),tr("校园网失去连接"), this->icon(), msgDur);});
+        showMessage(tr("无法连接至校园网"),tr("校园网失去连接"), this->icon(), msgDur);
+        setToolTip(tr("当前状态：无法连接"));});
+    connect(netctrl, NetController::sendInfo, this, handleInfo);
 
     loginAction = new QAction(tr("连接网络"),this);
     logoutAction = new QAction(tr("断开网络"),this);
     autoLogin = new QAction(tr("自动重连"), this);
     optionsAction = new QAction(tr("设置"), this);
+    aboutAction = new QAction(tr("关于"), this);
     quitAction = new QAction(tr("退出"), this);
+
+    mbAction = new QAction(tr("已用流量: "),this);
+    timeAction = new QAction(tr("已用时长: "),this);
+    balanceAction = new QAction(tr("账户余额: "),this);
+    ipAction = new QAction(tr("IP地址: "),this);
 
     autoLogin->setCheckable(true);
 
@@ -41,19 +53,36 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         netctrl->sendLoginRequest();
     });
     connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
+    connect(aboutAction, QAction::triggered, this, showAbout);
     connect(quitAction, QAction::triggered, this,[this](){emit exit();});
 
     autoLogin->setChecked(true);
 
+    infoMenu->setTitle("账户信息");
+    infoMenu->addAction(mbAction);
+    infoMenu->addAction(timeAction);
+    infoMenu->addAction(balanceAction);
+    infoMenu->addAction(ipAction);
+
     menu->addAction(loginAction);
     menu->addAction(logoutAction);
     menu->addAction(autoLogin);
+    menu->addMenu(infoMenu);
     menu->addAction(optionsAction);
+    menu->addAction(aboutAction);
     menu->addAction(quitAction);
 
     setContextMenu(menu);
 
     connect(this, activated, this, handleActivated);
+
+    autoLoginTimer = new QTimer(this);
+    autoLoginTimer->setInterval(1000);
+    autoLoginTimer->start();
+    connect(autoLoginTimer,QTimer::timeout, this, [this](){
+        if(currentState == Offline && isAutoLogin && !isForceLogout)
+            netctrl->sendLoginRequest();
+    });
 
 }
 
@@ -73,6 +102,19 @@ void MainTray::showOptions()
     opWindow.show();
 }
 
+void MainTray::showAbout()
+{
+    QMessageBox *aboutWindow = new QMessageBox();
+    aboutWindow->setStandardButtons(QMessageBox::Ok);
+    aboutWindow->setText(tr("<h1>NEU-Dectect</h1>"
+                             "<p>Based on Qt 5.10.0 (MinGW 5.3.0, 32bit)</p>"
+                             "Source Code: <a href=\"https://github.com/TurnMeOn/NEU-Dectect\">https://github.com/TurnMeOn/NEU-Dectect</a><br/>"
+                            "Email: <address>"
+                            "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">TurnMeOn</a>"
+                            "</address>"));
+    aboutWindow->show();
+}
+
 void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
 {
     netctrl->setUsername(id);
@@ -81,5 +123,18 @@ void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
     netctrl->sendLoginRequest();
     settings.setValue("id", id);
     settings.setValue("password", pass);
+}
+
+void MainTray::handleInfo(QString mb, QString sec, QString balance, QString ip)
+{
+    QString mbString = QString::number(mb.toDouble()/1000000.0, 'f', 2);
+    int totalSec = sec.toInt();
+    int hour = (totalSec/3600);
+    int min = ((totalSec-hour*3600)/60);
+    QString second = QString::number(totalSec-hour*3600-min*60);
+    mbAction->setText(tr("已用流量: ") + mbString + tr(" M"));
+    timeAction->setText(tr("已用时长: ") + QString::number(hour) + ":" +QString::number(min) + ":" + second);
+    balanceAction->setText(tr("账户余额: ") + balance);
+    ipAction->setText(tr("IP地址: ") + ip);
 }
 

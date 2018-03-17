@@ -37,6 +37,7 @@ signals:
     void getOnline();
     void getOffline(bool isForce);
     void getDisconnected();
+    void sendInfo(QString mb, QString sec, QString balance, QString ip);
 
 public slots:
     void handleResponse(QNetworkReply *reply);
