@@ -2,6 +2,8 @@
 
 OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : QWidget(parent)
 {
+    setWindowTitle(tr("选项"));
+
     vlayout = new QVBoxLayout(this);
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
