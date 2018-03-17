@@ -14,24 +14,25 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     netctrl->setPassword(settings.value("password", 0).toByteArray());
 
     connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
-    //发送通知
+    //连接controller状态改变信号
     connect(netctrl, NetController::getOnline, this, [this](){
         showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
         currentState = Online;
-        setToolTip(tr("当前状态：连接"));
+        setToolTip(tr("当前状态：连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
     });
-    connect(netctrl, NetController::getOffline, this, [this](bool isForce){
+    connect(netctrl, NetController::getOffline, this, [this](){
         showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
         currentState = Offline;
-        setToolTip(tr("当前状态：断开"));
-        isForceLogout = isForce;
+        setToolTip(tr("当前状态：断开"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
         }
     );
     connect(netctrl, NetController::getDisconnected, this, [this](){
-        showMessage(tr("无法连接至校园网"),tr("校园网失去连接"), this->icon(), msgDur);
-        setToolTip(tr("当前状态：无法连接"));});
+        showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
+        currentState = Disconnected;
+        setToolTip(tr("当前状态：无法连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));});
     connect(netctrl, NetController::sendInfo, this, handleInfo);
 
+    //菜单Action
     loginAction = new QAction(tr("连接网络"),this);
     logoutAction = new QAction(tr("断开网络"),this);
     autoLogin = new QAction(tr("自动重连"), this);
@@ -46,11 +47,16 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
 
     autoLogin->setCheckable(true);
 
-    connect(loginAction, QAction::triggered, this,[this](){netctrl->sendLoginRequest();});
-    connect(logoutAction, QAction::triggered, this,[this](){netctrl->sendLogoutRequest();});
+    connect(loginAction, QAction::triggered, this,[this](){
+        netctrl->sendLoginRequest();
+        isForceLogout = false;
+    });
+    connect(logoutAction, QAction::triggered, this,[this](){
+        netctrl->sendLogoutRequest();
+        isForceLogout = true;
+    });
     connect(autoLogin, QAction::toggled, this, [this](bool set){
         isAutoLogin = set;
-        netctrl->sendLoginRequest();
     });
     connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
     connect(aboutAction, QAction::triggered, this, showAbout);
@@ -75,15 +81,24 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     setContextMenu(menu);
 
     connect(this, activated, this, handleActivated);
+    connect(this, exit, this, [this](){setVisible(false);});
 
     autoLoginTimer = new QTimer(this);
     autoLoginTimer->setInterval(1000);
     autoLoginTimer->start();
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
+//        netctrl->checkStatus();   //可只使用一个定时器
+        //Offline状态下自动重连
         if(currentState == Offline && isAutoLogin && !isForceLogout)
             netctrl->sendLoginRequest();
     });
 
+}
+
+MainTray::~MainTray()
+{
+    delete menu;
+    delete infoMenu;
 }
 
 void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)

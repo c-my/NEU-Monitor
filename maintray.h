@@ -16,6 +16,7 @@ class MainTray: public QSystemTrayIcon
     Q_OBJECT
 public:
     MainTray(QByteArray username, QByteArray password, QObject *parent = Q_NULLPTR);
+    ~MainTray();
     enum Status {Unknown, Offline, Online, Disconnected};
 
 private:
@@ -25,17 +26,17 @@ private:
     NetController *netctrl;
     QSettings settings;
     OptionsWindow opWindow;
-    QTimer *autoLoginTimer;
-    bool isForceLogout = false;
+    QTimer *autoLoginTimer; //自动重连定时器
 
-    bool isAutoLogin = true;
-    Status currentState = Unknown;
-    void handleActivated(QSystemTrayIcon::ActivationReason reason);
-    void showOptions();
-    void showAbout();
+    bool isForceLogout = false; //自动重连flag
+    bool isAutoLogin = true;    //手动注销flag
+    Status currentState = Unknown;  //当前状态
+    void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击
+    void showOptions(); //显示选项窗口
+    void showAbout();   //显示关于窗口
 
     QByteArray user, passwd;
-    int msgDur = 500;
+    int msgDur = 1000;   //通知持续时间
 
 
 signals:

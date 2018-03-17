@@ -1,7 +1,8 @@
 #include "netcontroller.h"
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
-            username(id), password(passwd), flag(Disconnected), manager(this), checkTimer(new QTimer(this))
+            username(id), password(passwd), NEUStatus(Unknown), flag(Unknown),
+            manager(this), checkTimer(new QTimer(this))
 {    
     checkParam.append("action=get_online_info");
 
@@ -19,8 +20,7 @@ void NetController::checkStatus()
     if(NEUStatus==Offline&&flag!=Offline)
     {
         flag = Offline;
-        emit getOffline(isForceLogout);
-        isForceLogout = false;
+        emit getOffline();
     }
     else if(NEUStatus == Online && flag != Online)
     {
@@ -42,7 +42,6 @@ void NetController::sendCheckRequest()
 
 void NetController::sendLoginRequest()
 {
-    isForceLogout = true;
     request.setUrl(QUrl(loginUrl));
 
     QByteArray loginParam;
