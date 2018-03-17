@@ -147,9 +147,9 @@ void MainTray::handleInfo(QString mb, QString sec, QString balance, QString ip)
     int hour = (totalSec/3600);
     int min = ((totalSec-hour*3600)/60);
     QString second = QString::number(totalSec-hour*3600-min*60);
-    mbAction->setText(tr("已用流量: ") + mbString + tr(" M"));
-    timeAction->setText(tr("已用时长: ") + QString::number(hour) + ":" +QString::number(min) + ":" + second);
-    balanceAction->setText(tr("账户余额: ") + balance);
-    ipAction->setText(tr("IP地址: ") + ip);
+    mbAction->setText(tr("已用流量:\t") + mbString + tr(" M"));
+    timeAction->setText(tr("已用时长:\t") + QString::number(hour) + ":" +QString::number(min) + ":" + second);
+    balanceAction->setText(tr("账户余额:\t") + balance);
+    ipAction->setText(tr("IP地址:\t") + ip);
 }
 
