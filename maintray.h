@@ -37,6 +37,7 @@ private:
     QByteArray user, passwd;
     int msgDur = 500;
 
+
 signals:
     void exit();
 

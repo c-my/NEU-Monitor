@@ -90,7 +90,7 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::Trigger:
-        contextMenu()->show();
+        contextMenu()->popup(this->geometry().topRight());
         break;
     default:
         break;
