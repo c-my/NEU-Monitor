@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QTimer>
+#include <QApplication>
 
 class MainTray: public QSystemTrayIcon
 {
@@ -20,9 +21,9 @@ public:
     enum Status {Unknown, Offline, Online, Disconnected};
 
 private:
-    QMenu *menu, *infoMenu;
+    QMenu *menu, *infoMenu, *settingsMenu;
     QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *aboutAction, *quitAction;
-    QAction *mbAction, *timeAction, *balanceAction, *ipAction;
+    QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction;
     NetController *netctrl;
     QSettings settings;
     OptionsWindow opWindow;
@@ -34,6 +35,7 @@ private:
     void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击
     void showOptions(); //显示选项窗口
     void showAbout();   //显示关于窗口
+    void setAutoStart(bool set);
 
     QByteArray user, passwd;
     int msgDur = 1000;   //通知持续时间

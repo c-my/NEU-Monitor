@@ -1,7 +1,7 @@
 #include "maintray.h"
 
 MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent),
-    menu(new QMenu()),infoMenu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
+    menu(new QMenu()),infoMenu(new QMenu()), settingsMenu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
     opWindow(settings.value("id",0).toByteArray(), settings.value("password", 0).toByteArray()),
     user(username),passwd(password)
 {
@@ -36,7 +36,8 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     loginAction = new QAction(tr("连接网络"),this);
     logoutAction = new QAction(tr("断开网络"),this);
     autoLogin = new QAction(tr("自动重连"), this);
-    optionsAction = new QAction(tr("设置"), this);
+    optionsAction = new QAction(tr("选项"), this);
+    bootAction = new QAction(tr("开机启动"), this);
     aboutAction = new QAction(tr("关于"), this);
     quitAction = new QAction(tr("退出"), this);
 
@@ -46,6 +47,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     ipAction = new QAction(tr("IP地址: "),this);
 
     autoLogin->setCheckable(true);
+    bootAction->setCheckable(true);
 
     connect(loginAction, QAction::triggered, this,[this](){
         netctrl->sendLoginRequest();
@@ -59,13 +61,22 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         isAutoLogin = set;
         settings.setValue("isAutoLogin", set);
     });
+    connect(bootAction, QAction::toggled, this, [this](bool set){
+        settings.setValue("isOnBoot", set);
+        setAutoStart(set);
+    });
     connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
     connect(aboutAction, QAction::triggered, this, showAbout);
     connect(quitAction, QAction::triggered, this,[this](){emit exit();});
 
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
+    bootAction->setChecked(settings.value("isOnBoot", false).toBool());
 
-    infoMenu->setTitle("账户信息");
+    settingsMenu->setTitle(tr("设置"));
+    settingsMenu->addAction(optionsAction);
+    settingsMenu->addAction(bootAction);
+
+    infoMenu->setTitle(tr("账户信息"));
     infoMenu->addAction(mbAction);
     infoMenu->addAction(timeAction);
     infoMenu->addAction(balanceAction);
@@ -75,7 +86,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     menu->addAction(logoutAction);
     menu->addAction(autoLogin);
     menu->addMenu(infoMenu);
-    menu->addAction(optionsAction);
+    menu->addMenu(settingsMenu);
     menu->addAction(aboutAction);
     menu->addAction(quitAction);
 
@@ -129,6 +140,22 @@ void MainTray::showAbout()
                             "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">TurnMeOn</a>"
                             "</address>"));
     aboutWindow->show();
+}
+
+void MainTray::setAutoStart(bool set)
+{
+    QString application_name = QApplication::applicationName();
+    QSettings *settings = new QSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    if(set)
+    {
+        QString application_path = QApplication::applicationFilePath();
+        settings->setValue(application_name, application_path.replace("/", "\\"));
+    }
+    else
+    {
+        settings->remove(application_name);
+    }
+    delete settings;
 }
 
 void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
