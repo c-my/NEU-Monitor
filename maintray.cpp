@@ -16,20 +16,25 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
     //连接controller状态改变信号
     connect(netctrl, NetController::getOnline, this, [this](){
-        showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
+        if(!isMute)
+            showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
         currentState = Online;
         setToolTip(tr("当前状态：连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
     });
     connect(netctrl, NetController::getOffline, this, [this](){
-        showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
+        if(!isMute)
+            showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
         currentState = Offline;
         setToolTip(tr("当前状态：断开"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
         }
     );
     connect(netctrl, NetController::getDisconnected, this, [this](){
-        showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
+        if(!isMute)
+            showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
         currentState = Disconnected;
-        setToolTip(tr("当前状态：无法连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));});
+        setToolTip(tr("当前状态：无法连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
+    }
+    );
     connect(netctrl, NetController::sendInfo, this, handleInfo);
 
     //菜单Action
@@ -38,6 +43,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     autoLogin = new QAction(tr("自动重连"), this);
     optionsAction = new QAction(tr("选项"), this);
     bootAction = new QAction(tr("开机启动"), this);
+    muteAction = new QAction(tr("勿扰模式"), this);
     aboutAction = new QAction(tr("关于"), this);
     quitAction = new QAction(tr("退出"), this);
 
@@ -48,6 +54,9 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
 
     autoLogin->setCheckable(true);
     bootAction->setCheckable(true);
+    muteAction->setCheckable(true);
+
+    muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, QAction::triggered, this,[this](){
         netctrl->sendLoginRequest();
@@ -61,6 +70,10 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         isAutoLogin = set;
         settings.setValue("isAutoLogin", set);
     });
+    connect(muteAction, QAction::toggled, this, [this](bool set){
+        settings.setValue("isMute", set);
+        isMute = set;
+    });
     connect(bootAction, QAction::toggled, this, [this](bool set){
         settings.setValue("isOnBoot", set);
         setAutoStart(set);
@@ -71,11 +84,14 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
 
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
+    muteAction->setChecked(settings.value("isMute", false).toBool());
 
     isAutoLogin = autoLogin->isChecked();
+    isMute = muteAction->isChecked();
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
+    settingsMenu->addAction(muteAction);
     settingsMenu->addAction(bootAction);
 
     infoMenu->setTitle(tr("账户信息"));

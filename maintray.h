@@ -23,7 +23,7 @@ public:
 private:
     QMenu *menu, *infoMenu, *settingsMenu;
     QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *aboutAction, *quitAction;
-    QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction;
+    QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction;
     NetController *netctrl;
     QSettings settings;
     OptionsWindow opWindow;
@@ -31,6 +31,7 @@ private:
 
     bool isForceLogout = false; //自动重连flag
     bool isAutoLogin;    //手动注销flag
+    bool isMute;        //勿扰模式flag
     Status currentState = Unknown;  //当前状态
     void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击
     void showOptions(); //显示选项窗口
