@@ -30,7 +30,7 @@ private:
     QTimer *autoLoginTimer; //自动重连定时器
 
     bool isForceLogout = false; //自动重连flag
-    bool isAutoLogin = true;    //手动注销flag
+    bool isAutoLogin;    //手动注销flag
     Status currentState = Unknown;  //当前状态
     void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击
     void showOptions(); //显示选项窗口

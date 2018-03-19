@@ -2,7 +2,7 @@
 
 MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent),
     menu(new QMenu()),infoMenu(new QMenu()), settingsMenu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
-    opWindow(settings.value("id",0).toByteArray(), settings.value("password", 0).toByteArray()),
+    opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray()),
     user(username),passwd(password)
 {
 
@@ -71,6 +71,8 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
 
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
+
+    isAutoLogin = autoLogin->isChecked();
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
