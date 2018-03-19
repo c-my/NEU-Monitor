@@ -98,10 +98,10 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(this, exit, this, [this](){setVisible(false);});
 
     autoLoginTimer = new QTimer(this);
-    autoLoginTimer->setInterval(1000);
+    autoLoginTimer->setInterval(checkInterval);
     autoLoginTimer->start();
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
-//        netctrl->checkStatus();   //可只使用一个定时器
+        netctrl->checkStatus();   //可只使用一个定时器
         //Offline状态下自动重连
         if(currentState == Offline && isAutoLogin && !isForceLogout)
             netctrl->sendLoginRequest();

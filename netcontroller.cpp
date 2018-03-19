@@ -2,7 +2,7 @@
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
             username(id), password(passwd), NEUStatus(Unknown), flag(Unknown),
-            manager(this), checkTimer(new QTimer(this))
+            manager(this)
 {    
     checkParam.append("action=get_online_info");
 
@@ -19,10 +19,6 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
     request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9");
 
     connect(&manager, QNetworkAccessManager::finished, this, handleResponse);
-
-    checkTimer->setInterval(1000);
-    connect(checkTimer, QTimer::timeout, this, checkStatus);
-    checkTimer->start();
 }
 
 void NetController::checkStatus()

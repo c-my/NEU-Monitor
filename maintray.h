@@ -39,6 +39,7 @@ private:
 
     QByteArray user, passwd;
     int msgDur = 1000;   //通知持续时间
+    int checkInterval = 1000;   //查询状态定时器周期
 
 
 signals:
