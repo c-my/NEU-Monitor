@@ -119,8 +119,10 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
         netctrl->checkStatus();   //可只使用一个定时器
         //Offline状态下自动重连
-        if(currentState == Offline && isAutoLogin && !isForceLogout)
+        if(currentState == Offline && isAutoLogin && !isForceLogout){
+            netctrl->sendLogoutRequest();   //防止已经在线的情况登录失败
             netctrl->sendLoginRequest();
+        }
     });
 
 }
@@ -153,9 +155,9 @@ void MainTray::showAbout()
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                              "<p>Based on Qt 5.10.1 (MinGW 5.3.0, 32bit)</p>"
-                             "Source Code: <a href=\"https://github.com/TurnMeOn/NEU-Monitor\">https://github.com/TurnMeOn/NEU-Monitor</a><br/>"
+                             "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
                             "Email: <address>"
-                            "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">TurnMeOn</a>"
+                            "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">Cai.MY</a>"
                             "</address>"));
     aboutWindow->show();
 }
