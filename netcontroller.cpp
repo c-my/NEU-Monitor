@@ -27,17 +27,16 @@ void NetController::checkStatus()
     if(NEUStatus==Offline&&flag!=Offline)
     {
         flag = Offline;
-        emit getOffline();
+        emit stateChanged(flag);
     }
     else if(NEUStatus == Online && flag != Online)
     {
         flag = Online;
-        emit getOnline();
+        emit stateChanged(flag);
     }
     else if(NEUStatus == Disconnected && flag != Disconnected)
     {
         flag = Disconnected;
-        emit getDisconnected();
     }
 }
 

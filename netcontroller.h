@@ -33,9 +33,7 @@ private:
     QNetworkRequest request;
 
 signals:
-    void getOnline();
-    void getOffline();
-    void getDisconnected();
+    void stateChanged(Status newState);
     void sendInfo(QString mb, QString sec, QString balance, QString ip);
 
 public slots:
