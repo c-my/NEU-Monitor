@@ -1,9 +1,12 @@
 #include "maintray.h"
 
 MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): QSystemTrayIcon(parent),
-    menu(new QMenu()),infoMenu(new QMenu()), settingsMenu(new QMenu()), settings("TurnMeOn", "NEU-Dectect"),
-    opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray()),
-    user(username),passwd(password)
+        menu(new QMenu()),infoMenu(new QMenu()),
+        settingsMenu(new QMenu()),
+        settings(QSettings::IniFormat, QSettings::UserScope,"TurnMeOn", "NEU-Dectect"),
+        opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray()),
+        user(username),
+        passwd(password)
 {
 
     opWindow.hide();

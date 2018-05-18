@@ -1,10 +1,13 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : QWidget(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(tr("选项"));
 
-    vlayout = new QVBoxLayout(this);
+    tabWidget = new QTabWidget(this);
+    page1 = new QWidget(this);
+
+    vlayout = new QVBoxLayout(page1);
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
 
@@ -27,7 +30,10 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : 
     vlayout->addLayout(hlayout);
     vlayout->setSpacing(20);
 
-    setLayout(vlayout);
+    page1->setLayout(vlayout);
+
+    tabWidget->addTab(page1, tr("常规"));
+    setCentralWidget(tabWidget);
 
     connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idEdit->text().toUtf8(), passwordEdit->text().toUtf8());});
     connect(cancleButton, QPushButton::clicked, this, hide);
