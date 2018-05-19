@@ -46,7 +46,6 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         }
         currentState = state;
         showToolTip(state);
-        qDebug()<<currentState;
     });
 
     connect(netctrl, NetController::sendInfo, this, handleInfo);
@@ -148,12 +147,15 @@ void MainTray::showToolTip(NetController::State state)
 {
     switch (state) {
     case NetController::Online:
+        setIcon(QIcon(tr(":/icon/favicon.ico")));
         setToolTip(tr("当前状态：连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
         break;
     case NetController::Offline:
+        setIcon(QIcon(tr(":/icon/offline.ico")));
         setToolTip(tr("当前状态：断开\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭"))+tr("\n双击以登陆"));
         break;
     case NetController::Disconnected:
+        setIcon(QIcon(tr(":/icon/offline.ico")));
         setToolTip(tr("当前状态：无法连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
         break;
     default:

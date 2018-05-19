@@ -64,7 +64,6 @@ void NetController::sendLoginRequest()
     loginParam.append(username);
 
     manager.post(request, loginParam);
-    qDebug()<<"logout";
 }
 
 void NetController::sendLogoutRequest()
@@ -80,7 +79,6 @@ void NetController::sendLogoutRequest()
     logoutParam.append(username);
 
     manager.post(request, logoutParam);
-    qDebug()<<"logout";
 }
 
 void NetController::handleResponse(QNetworkReply *reply)

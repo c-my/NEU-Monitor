@@ -6,7 +6,6 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
-#include <QDebug>
 
 class NetController : public QObject
 {

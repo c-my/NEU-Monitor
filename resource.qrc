@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/icon">
         <file>favicon.ico</file>
+        <file>offline.ico</file>
     </qresource>
 </RCC>
