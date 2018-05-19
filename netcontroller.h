@@ -28,6 +28,7 @@ private:
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
     State NEUState = Unknown, lastState = Unknown;
+    int offlineCount = 0;
 
     QNetworkAccessManager manager;
     QNetworkRequest request;

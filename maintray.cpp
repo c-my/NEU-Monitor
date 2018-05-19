@@ -24,6 +24,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(netctrl, NetController::stateChanged, this, [this](NetController::State state){
         switch (state) {
         case NetController::Online:
+            isForceLogin = false;
             setIcon(QIcon(tr(":/icon/favicon.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
@@ -31,11 +32,13 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
             logoutAction->setEnabled(true);
             break;
         case NetController::Offline:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-            loginAction->setEnabled(true);
-            logoutAction->setEnabled(true);
+            if(!isForceLogin){
+                setIcon(QIcon(tr(":/icon/offline.ico")));
+                if(!muteAction->isChecked())
+                    showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
+                loginAction->setEnabled(true);
+                logoutAction->setEnabled(true);
+            }
             break;
         case NetController::Disconnected:
             setIcon(QIcon(tr(":/icon/offline.ico")));
@@ -75,6 +78,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, QAction::triggered, this,[this](){
+        isForceLogin = true;
         netctrl->sendLogoutRequest();
         netctrl->sendLoginRequest();
         isForceLogout = false;

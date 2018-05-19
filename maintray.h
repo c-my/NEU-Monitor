@@ -28,7 +28,8 @@ private:
     OptionsWindow opWindow;
     QTimer *autoLoginTimer; //自动重连定时器
 
-    bool isForceLogout = false; //自动重连flag
+    bool isForceLogout = false;
+    bool isForceLogin = false;
 
     NetController::State currentState = NetController::Unknown;  //当前状态
 
@@ -39,7 +40,7 @@ private:
     void setAutoStart(bool set);
 
     QByteArray user, passwd;
-    int msgDur = 1000;   //通知持续时间
+    int msgDur = 500;   //通知持续时间
     int checkInterval = 1000;   //查询状态定时器周期
 
 

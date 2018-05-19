@@ -24,8 +24,9 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
 void NetController::checkState()
 {
     sendCheckRequest();
-    if(NEUState==Offline&&lastState!=Offline)
+    if(NEUState == Offline && lastState != Offline && offlineCount++ > 1)
     {
+        offlineCount = 0;
         lastState = Offline;
         emit stateChanged(lastState);
     }
@@ -97,6 +98,7 @@ void NetController::handleResponse(QNetworkReply *reply)
             }
             else
             {
+                offlineCount = 0;
                 NEUState = Online;
                 QStringList infoList = status.split(',');
                 emit sendInfo(infoList[0], infoList[1], infoList[2], infoList[5]);
@@ -104,6 +106,7 @@ void NetController::handleResponse(QNetworkReply *reply)
         }
         else
         {
+            offlineCount = 0;
             NEUState = Disconnected;
         }
     }
