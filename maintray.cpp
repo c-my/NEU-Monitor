@@ -24,18 +24,21 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(netctrl, NetController::stateChanged, this, [this](NetController::State state){
         switch (state) {
         case NetController::Online:
+            setIcon(QIcon(tr(":/icon/favicon.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
             loginAction->setEnabled(true);
             logoutAction->setEnabled(true);
             break;
         case NetController::Offline:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
             loginAction->setEnabled(true);
             logoutAction->setEnabled(true);
             break;
         case NetController::Disconnected:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
             loginAction->setDisabled(true);
@@ -147,15 +150,12 @@ void MainTray::showToolTip(NetController::State state)
 {
     switch (state) {
     case NetController::Online:
-        setIcon(QIcon(tr(":/icon/favicon.ico")));
         setToolTip(tr("当前状态：连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
         break;
     case NetController::Offline:
-        setIcon(QIcon(tr(":/icon/offline.ico")));
         setToolTip(tr("当前状态：断开\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭"))+tr("\n双击以登陆"));
         break;
     case NetController::Disconnected:
-        setIcon(QIcon(tr(":/icon/offline.ico")));
         setToolTip(tr("当前状态：无法连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
         break;
     default:
