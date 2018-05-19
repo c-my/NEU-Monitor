@@ -163,7 +163,6 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     {
         opWindow.show();
     }
-    qDebug()<<settings.fileName();
 }
 
 MainTray::~MainTray()

@@ -74,7 +74,6 @@ void NetController::sendLoginRequest()
     loginParam.append(username);
 
     manager.post(request, loginParam);
-    qDebug()<<"send login";
 }
 
 void NetController::sendLogoutRequest()
@@ -90,7 +89,6 @@ void NetController::sendLogoutRequest()
     logoutParam.append(username);
 
     manager.post(request, logoutParam);
-    qDebug()<<"send logout";
 }
 
 void NetController::handleResponse(QNetworkReply *reply)
@@ -142,7 +140,6 @@ void NetController::handleResponse(QNetworkReply *reply)
         else if(loginPage.contains("网络已连接")){//登陆成功
             lastState = NEUState;
             NEUState = Online;
-            qDebug()<<tr("网络已连接");
         }
     }
 }
