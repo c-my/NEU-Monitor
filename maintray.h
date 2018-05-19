@@ -29,9 +29,10 @@ private:
     QTimer *autoLoginTimer; //自动重连定时器
 
     bool isForceLogout = false; //自动重连flag
-    bool isAutoLogin;    //手动注销flag
-    bool isMute;        //勿扰模式flag
-    NetController::Status currentState = NetController::Unknown;  //当前状态
+
+    NetController::State currentState = NetController::Unknown;  //当前状态
+
+    void showToolTip(NetController::State state);
     void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击、双击
     void showOptions(); //显示选项窗口
     void showAbout();   //显示关于窗口
@@ -46,7 +47,7 @@ signals:
     void exit();
 
 private slots:
-    void updataUserInfo(QByteArray id, QByteArray pass);
+    void updateUserInfo(QByteArray id, QByteArray pass);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
 
 };

@@ -1,7 +1,7 @@
 #include "netcontroller.h"
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
-            username(id), password(passwd), NEUStatus(Unknown), flag(Unknown),
+            username(id), password(passwd), NEUState(Unknown), lastState(Unknown),
             manager(this)
 {    
     checkParam.append("action=get_online_info");
@@ -21,22 +21,23 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
     connect(&manager, QNetworkAccessManager::finished, this, handleResponse);
 }
 
-void NetController::checkStatus()
+void NetController::checkState()
 {
     sendCheckRequest();
-    if(NEUStatus==Offline&&flag!=Offline)
+    if(NEUState==Offline&&lastState!=Offline)
     {
-        flag = Offline;
-        emit stateChanged(flag);
+        lastState = Offline;
+        emit stateChanged(lastState);
     }
-    else if(NEUStatus == Online && flag != Online)
+    else if(NEUState == Online && lastState != Online)
     {
-        flag = Online;
-        emit stateChanged(flag);
+        lastState = Online;
+        emit stateChanged(lastState);
     }
-    else if(NEUStatus == Disconnected && flag != Disconnected)
+    else if(NEUState == Disconnected && lastState != Disconnected)
     {
-        flag = Disconnected;
+        lastState = Disconnected;
+        emit stateChanged(lastState);
     }
 }
 
@@ -63,6 +64,7 @@ void NetController::sendLoginRequest()
     loginParam.append(username);
 
     manager.post(request, loginParam);
+    qDebug()<<"logout";
 }
 
 void NetController::sendLogoutRequest()
@@ -78,6 +80,7 @@ void NetController::sendLogoutRequest()
     logoutParam.append(username);
 
     manager.post(request, logoutParam);
+    qDebug()<<"logout";
 }
 
 void NetController::handleResponse(QNetworkReply *reply)
@@ -92,18 +95,18 @@ void NetController::handleResponse(QNetworkReply *reply)
             QString status = reply->readAll();
             if(status==offlineString)
             {
-                NEUStatus = Offline;
+                NEUState = Offline;
             }
             else
             {
-                NEUStatus = Online;
+                NEUState = Online;
                 QStringList infoList = status.split(',');
                 emit sendInfo(infoList[0], infoList[1], infoList[2], infoList[5]);
             }
         }
         else
         {
-            NEUStatus = Disconnected;
+            NEUState = Disconnected;
         }
     }
     else if(url==loginUrl)

@@ -19,29 +19,34 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     netctrl->setUsername(settings.value("id",0).toByteArray());
     netctrl->setPassword(settings.value("password", 0).toByteArray());
 
-    connect(&opWindow, OptionsWindow::saveSettings, this, updataUserInfo);
+    connect(&opWindow, OptionsWindow::saveSettings, this, updateUserInfo);
     //连接controller状态改变信号
-    connect(netctrl, NetController::stateChanged, this, [this](NetController::Status state){
+    connect(netctrl, NetController::stateChanged, this, [this](NetController::State state){
         switch (state) {
         case NetController::Online:
-            if(!isMute)
+            if(!muteAction->isChecked())
                 showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
-            setToolTip(tr("当前状态：连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
+            loginAction->setEnabled(true);
+            logoutAction->setEnabled(true);
             break;
         case NetController::Offline:
-            if(!isMute)
+            if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-            setToolTip(tr("当前状态：断开"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
+            loginAction->setEnabled(true);
+            logoutAction->setEnabled(true);
             break;
         case NetController::Disconnected:
-            if(!isMute)
+            if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
-            setToolTip(tr("当前状态：无法连接"/*\n自动重连：") + (isAutoLogin? tr("开启"):tr("关闭")*/));
+            loginAction->setDisabled(true);
+            logoutAction->setDisabled(true);
             break;
         default:
             break;
         }
         currentState = state;
+        showToolTip(state);
+        qDebug()<<currentState;
     });
 
     connect(netctrl, NetController::sendInfo, this, handleInfo);
@@ -68,6 +73,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, QAction::triggered, this,[this](){
+        netctrl->sendLogoutRequest();
         netctrl->sendLoginRequest();
         isForceLogout = false;
     });
@@ -76,12 +82,12 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         isForceLogout = true;
     });
     connect(autoLogin, QAction::toggled, this, [this](bool set){
-        isAutoLogin = set;
         settings.setValue("isAutoLogin", set);
+        isForceLogout = false;
+        showToolTip(currentState);
     });
     connect(muteAction, QAction::toggled, this, [this](bool set){
         settings.setValue("isMute", set);
-        isMute = set;
     });
     connect(bootAction, QAction::toggled, this, [this](bool set){
         settings.setValue("isOnBoot", set);
@@ -95,8 +101,6 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
     muteAction->setChecked(settings.value("isMute", false).toBool());
 
-    isAutoLogin = autoLogin->isChecked();
-    isMute = muteAction->isChecked();
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
@@ -126,14 +130,12 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     autoLoginTimer->setInterval(checkInterval);
     autoLoginTimer->start();
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
-        netctrl->checkStatus();   //可只使用一个定时器
+        netctrl->checkState();
         //Offline状态下自动重连
-        if(currentState == NetController::Offline && isAutoLogin && !isForceLogout){
-            netctrl->sendLogoutRequest();   //防止已经在线的情况登录失败
-            netctrl->sendLoginRequest();
+        if(currentState == NetController::Offline && autoLogin->isChecked() && !isForceLogout){
+            loginAction->trigger();
         }
     });
-
 }
 
 MainTray::~MainTray()
@@ -142,14 +144,31 @@ MainTray::~MainTray()
     delete infoMenu;
 }
 
+void MainTray::showToolTip(NetController::State state)
+{
+    switch (state) {
+    case NetController::Online:
+        setToolTip(tr("当前状态：连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        break;
+    case NetController::Offline:
+        setToolTip(tr("当前状态：断开\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭"))+tr("\n双击以登陆"));
+        break;
+    case NetController::Disconnected:
+        setToolTip(tr("当前状态：无法连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        break;
+    default:
+        break;
+    }
+}
+
 void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
+    case QSystemTrayIcon::DoubleClick:
+        loginAction->trigger();
+        break;
     case QSystemTrayIcon::Trigger:
         contextMenu()->popup(this->geometry().topRight());
-        break;
-    case QSystemTrayIcon::DoubleClick:
-        netctrl->sendLoginRequest();
         break;
     default:
         break;
@@ -190,7 +209,7 @@ void MainTray::setAutoStart(bool set)
     delete settings;
 }
 
-void MainTray::updataUserInfo(QByteArray id, QByteArray pass)
+void MainTray::updateUserInfo(QByteArray id, QByteArray pass)
 {
     netctrl->setUsername(id);
     netctrl->setPassword(pass);

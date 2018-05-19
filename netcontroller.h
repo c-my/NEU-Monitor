@@ -6,13 +6,14 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QDebug>
 
 class NetController : public QObject
 {
     Q_OBJECT
 public:
     explicit NetController(QByteArray username, QByteArray password, QObject *parent = nullptr);
-    void checkStatus();
+    void checkState();
     void sendCheckRequest();
     void sendLoginRequest();
     void sendLogoutRequest();
@@ -20,20 +21,20 @@ public:
     void setUsername(QByteArray newName) { username = newName; }
     void setPassword(QByteArray newPass) { password = newPass; }
 
-    enum Status {Unknown, Offline, Online, Disconnected};
+    enum State {Unknown, Offline, Online, Disconnected};
 
 private:
     QString checkUrl = "http://ipgw.neu.edu.cn/include/auth_action.php";
     QString loginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
-    Status NEUStatus = Unknown, flag = Unknown;
+    State NEUState = Unknown, lastState = Unknown;
 
     QNetworkAccessManager manager;
     QNetworkRequest request;
 
 signals:
-    void stateChanged(Status newState);
+    void stateChanged(State newState);
     void sendInfo(QString mb, QString sec, QString balance, QString ip);
 
 public slots:
