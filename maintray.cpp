@@ -171,7 +171,8 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::DoubleClick:
-        loginAction->trigger();
+        if(currentState == NetController::Offline)
+            loginAction->trigger();
         break;
     case QSystemTrayIcon::Trigger:
         contextMenu()->popup(this->geometry().topRight());
