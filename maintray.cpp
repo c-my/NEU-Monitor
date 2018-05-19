@@ -6,7 +6,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     infoMenu(new QMenu()),
     settingsMenu(new QMenu()),
     //初始化settings
-    settings(QSettings::IniFormat, QSettings::UserScope, "TurnMeOn", "NEU-Dectect"),
+    settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
     //初始化optionswindow
     opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray()),
     user(username),
