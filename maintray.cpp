@@ -47,11 +47,27 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
             loginAction->setDisabled(true);
             logoutAction->setDisabled(true);
             break;
+        case NetController::WrongPass:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("登陆失败"),tr("密码错误"), this->icon(), msgDur);
+            break;
+        case NetController::Owed:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("登陆失败"),tr("已欠费"), this->icon(), msgDur);
+            break;
         default:
             break;
         }
         currentState = state;
         showToolTip(state);
+    });
+
+
+    connect(this, QSystemTrayIcon::messageClicked, this, [this](){
+        if(currentState == NetController::WrongPass)
+            opWindow.show();
     });
 
     connect(netctrl, NetController::sendInfo, this, handleInfo);
@@ -142,6 +158,12 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
             loginAction->trigger();
         }
     });
+
+    if(settings.value("id").isNull()||settings.value("password").isNull())
+    {
+        opWindow.show();
+    }
+    qDebug()<<settings.fileName();
 }
 
 MainTray::~MainTray()

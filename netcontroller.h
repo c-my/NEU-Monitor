@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QDebug>
 
 class NetController : public QObject
 {
@@ -20,7 +21,7 @@ public:
     void setUsername(QByteArray newName) { username = newName; }
     void setPassword(QByteArray newPass) { password = newPass; }
 
-    enum State {Unknown, Offline, Online, Disconnected};
+    enum State {Unknown, Offline, Online, Disconnected, Owed, WrongPass};
 
 private:
     QString checkUrl = "http://ipgw.neu.edu.cn/include/auth_action.php";

@@ -24,21 +24,30 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
 void NetController::checkState()
 {
     sendCheckRequest();
-    if(NEUState == Offline && lastState != Offline && offlineCount++ > 1)
+    if(NEUState == Offline && lastState != Offline/* && offlineCount++ > 1*/)
     {
-        offlineCount = 0;
         lastState = Offline;
-        emit stateChanged(lastState);
+        emit stateChanged(NEUState);
     }
     else if(NEUState == Online && lastState != Online)
     {
         lastState = Online;
-        emit stateChanged(lastState);
+        emit stateChanged(NEUState);
     }
     else if(NEUState == Disconnected && lastState != Disconnected)
     {
         lastState = Disconnected;
-        emit stateChanged(lastState);
+        emit stateChanged(NEUState);
+    }
+    else if(NEUState == WrongPass && lastState != WrongPass)
+    {
+        lastState = WrongPass;
+        emit stateChanged(NEUState);
+    }
+    else if(NEUState == Owed && lastState != Owed)
+    {
+        lastState = Owed;
+        emit stateChanged(NEUState);
     }
 }
 
@@ -65,6 +74,7 @@ void NetController::sendLoginRequest()
     loginParam.append(username);
 
     manager.post(request, loginParam);
+    qDebug()<<"send login";
 }
 
 void NetController::sendLogoutRequest()
@@ -80,6 +90,7 @@ void NetController::sendLogoutRequest()
     logoutParam.append(username);
 
     manager.post(request, logoutParam);
+    qDebug()<<"send logout";
 }
 
 void NetController::handleResponse(QNetworkReply *reply)
@@ -94,11 +105,17 @@ void NetController::handleResponse(QNetworkReply *reply)
             QString status = reply->readAll();
             if(status==offlineString)
             {
-                NEUState = Offline;
+                if(NEUState!=WrongPass && NEUState!=Owed && offlineCount++ > 1)
+                {
+                    offlineCount = 0;
+                    lastState = NEUState;
+                    NEUState = Offline;
+                }
             }
             else
             {
                 offlineCount = 0;
+                lastState = NEUState;
                 NEUState = Online;
                 QStringList infoList = status.split(',');
                 emit sendInfo(infoList[0], infoList[1], infoList[2], infoList[5]);
@@ -107,11 +124,25 @@ void NetController::handleResponse(QNetworkReply *reply)
         else
         {
             offlineCount = 0;
+            lastState = NEUState;
             NEUState = Disconnected;
         }
     }
     else if(url==loginUrl)
     {
-
+        QString loginPage(reply->readAll());
+        if(loginPage.contains(QString("已欠费"))){//欠费
+            lastState = NEUState;
+            NEUState = Owed;
+        }
+        else if(loginPage.contains("Password is error")){//密码错误
+            lastState = NEUState;
+            NEUState = WrongPass;
+        }
+        else if(loginPage.contains("网络已连接")){//登陆成功
+            lastState = NEUState;
+            NEUState = Online;
+            qDebug()<<tr("网络已连接");
+        }
     }
 }
