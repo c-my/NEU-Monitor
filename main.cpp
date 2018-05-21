@@ -1,5 +1,6 @@
 #include "maintray.h"
 #include <QApplication>
+#include <QFont>
 
 int main(int argc, char *argv[])
 {
@@ -7,6 +8,7 @@ int main(int argc, char *argv[])
     a.setQuitOnLastWindowClosed(false);
     a.setApplicationName(QObject::tr("NEU-Monitor"));
     a.setWindowIcon(QIcon(QObject::tr(":/icon/favicon.ico")));
+    a.setFont(QFont("Microsoft YaHei Light", 9));
     MainTray *tray = new MainTray("","");
     QObject::connect(tray, MainTray::exit, &a, QApplication::quit);
     tray->show();
