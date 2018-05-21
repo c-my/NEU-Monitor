@@ -159,6 +159,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         }
     });
 
+    showToolTip(currentState);
     if(settings.value("id").isNull()||settings.value("password").isNull())
     {
         opWindow.show();
@@ -182,6 +183,15 @@ void MainTray::showToolTip(NetController::State state)
         break;
     case NetController::Disconnected:
         setToolTip(tr("当前状态：无法连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        break;
+    case NetController::Unknown:
+        setToolTip(tr("当前状态：正在识别\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        break;
+    case NetController::Owed:
+        setToolTip(tr("当前状态：已欠费\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        break;
+    case NetController::WrongPass:
+        setToolTip(tr("当前状态：密码错误\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
         break;
     default:
         break;
