@@ -106,6 +106,7 @@ void NetController::handleResponse(QNetworkReply *reply)
                 if(NEUState!=WrongPass && NEUState!=Owed && offlineCount++ > 1)
                 {
                     offlineCount = 0;
+                    disconnectCount = 0;
                     lastState = NEUState;
                     NEUState = Offline;
                 }
@@ -113,15 +114,17 @@ void NetController::handleResponse(QNetworkReply *reply)
             else
             {
                 offlineCount = 0;
+                disconnectCount = 0;
                 lastState = NEUState;
                 NEUState = Online;
                 QStringList infoList = status.split(',');
                 emit sendInfo(infoList[0], infoList[1], infoList[2], infoList[5]);
             }
         }
-        else
+        else if(disconnectCount++ > 1)
         {
             offlineCount = 0;
+            disconnectCount = 0;
             lastState = NEUState;
             NEUState = Disconnected;
         }
