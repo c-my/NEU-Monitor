@@ -19,6 +19,7 @@ public:
 
     void setUsername(QByteArray newName) { username = newName; }
     void setPassword(QByteArray newPass) { password = newPass; }
+    void setTotalTraffic(int newTraffic) { traffic = newTraffic; }
 
     enum State {Unknown, Offline, Online, Disconnected, Owed, WrongPass};
 
@@ -27,6 +28,7 @@ private:
     QString loginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
+    int traffic;
     State NEUState = Unknown, lastState = Unknown;
     int offlineCount = 0, disconnectCount = 0;
 

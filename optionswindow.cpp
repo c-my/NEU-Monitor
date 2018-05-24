@@ -1,6 +1,6 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : QMainWindow(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(tr("选项"));
 
@@ -17,8 +17,13 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : 
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setText(pass);
 
+    trafficSpin = new QSpinBox(this);
+    trafficSpin->setValue(traffic);
+    trafficSpin->setToolTip(tr("在流量将要用尽时进行提醒"));
+
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
+    layout->addRow(tr("流量(G)"), trafficSpin);
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
@@ -35,6 +40,9 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent) : 
     tabWidget->addTab(page1, tr("常规"));
     setCentralWidget(tabWidget);
 
-    connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idEdit->text().toUtf8(), passwordEdit->text().toUtf8());});
+    connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idEdit->text().toUtf8(),
+                                                                               passwordEdit->text().toUtf8(),
+                                                                               trafficSpin->value());
+                                                                                        });
     connect(cancleButton, QPushButton::clicked, this, hide);
 }

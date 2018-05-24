@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QTabWidget>
 #include <QLineEdit>
+#include <QSpinBox>
 #include <QPushButton>
 #include <QFormLayout>
 #include <QVBoxLayout>
@@ -14,19 +15,20 @@ class OptionsWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit OptionsWindow(QByteArray id, QByteArray pass, QWidget *parent = nullptr);
+    explicit OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent = nullptr);
 
 private:
     QTabWidget *tabWidget;
     QWidget *page1;
     QLineEdit *idEdit, *passwordEdit;
+    QSpinBox *trafficSpin;
     QPushButton *saveButton, *cancleButton;
     QFormLayout *layout;
     QVBoxLayout *vlayout;
     QHBoxLayout *hlayout;
 
 signals:
-    void saveSettings(QByteArray id, QByteArray pass);
+    void saveSettings(QByteArray id, QByteArray pass, int traffic);
 public slots:
 };
 

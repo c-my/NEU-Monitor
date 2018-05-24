@@ -8,7 +8,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     //初始化settings
     settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
     //初始化optionswindow
-    opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray()),
+    opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray(), settings.value("total traffic", 60).toInt()),
     user(username),
     passwd(password)
 {
@@ -16,8 +16,12 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     setIcon(QIcon(tr(":/icon/favicon.ico")));
 
     netctrl = new NetController(user,passwd,this);
-    netctrl->setUsername(settings.value("id",0).toByteArray());
-    netctrl->setPassword(settings.value("password", 0).toByteArray());
+    user = settings.value("id",0).toByteArray();
+    passwd = settings.value("password", 0).toByteArray();
+    totalTraffic = settings.value("total traffic", 60).toInt();
+    netctrl->setUsername(user);
+    netctrl->setPassword(passwd);
+    netctrl->setTotalTraffic(totalTraffic);
 
     connect(&opWindow, OptionsWindow::saveSettings, this, updateUserInfo);
     //连接controller状态改变信号
@@ -96,6 +100,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     connect(loginAction, QAction::triggered, this,[this](){
         isForceLogin = true;
         netctrl->sendLogoutRequest();
+        hasWarned = false;
         netctrl->sendLoginRequest();
         isForceLogout = false;
     });
@@ -174,28 +179,44 @@ MainTray::~MainTray()
 
 void MainTray::showToolTip(NetController::State state)
 {
+    QString tooltipString;
     switch (state) {
     case NetController::Online:
-        setToolTip(tr("当前状态：连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        tooltipString += tr("当前状态：连接");
         break;
     case NetController::Offline:
-        setToolTip(tr("当前状态：断开\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭"))+tr("\n双击以登陆"));
+        tooltipString += tr("当前状态：断开 （双击登陆）");
         break;
     case NetController::Disconnected:
-        setToolTip(tr("当前状态：无法连接\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        tooltipString += tr("当前状态：无法连接");
         break;
     case NetController::Unknown:
-        setToolTip(tr("当前状态：正在识别\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        tooltipString += tr("当前状态：正在识别");
         break;
     case NetController::Owed:
-        setToolTip(tr("当前状态：已欠费\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        tooltipString += tr("当前状态：已欠费");
         break;
     case NetController::WrongPass:
-        setToolTip(tr("当前状态：密码错误\n自动重连：") + (autoLogin->isChecked()? tr("开启"):tr("关闭")));
+        tooltipString += tr("当前状态：密码错误");
         break;
     default:
         break;
     }
+    tooltipString += tr("\n自动重连：");
+    tooltipString += autoLogin->isChecked()? tr("开启"):tr("关闭");
+    if(state == NetController::Online){
+        switch (trafficstate) {
+        case Over:
+            tooltipString += tr("\n流量已超额");
+            break;
+        case Nearly:
+            tooltipString += tr("\n剩余流量不足");
+            break;
+        default:
+            break;
+        }
+    }
+    setToolTip(tooltipString);
 }
 
 void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
@@ -247,19 +268,27 @@ void MainTray::setAutoStart(bool set)
     delete settings;
 }
 
-void MainTray::updateUserInfo(QByteArray id, QByteArray pass)
+void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
 {
     netctrl->setUsername(id);
     netctrl->setPassword(pass);
+    netctrl->setTotalTraffic(traffic);
+    user = id;
+    passwd = pass;
+    totalTraffic = traffic;
     opWindow.hide();
     netctrl->sendLoginRequest();
+    hasWarned = false;
     settings.setValue("id", id);
     settings.setValue("password", pass);
+    settings.setValue("total traffic", traffic);
 }
 
-void MainTray::handleInfo(QString mb, QString sec, QString balance, QString ip)
+void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip)
 {
-    QString mbString = QString::number(mb.toDouble()/1000000.0, 'f', 2);
+    QString mbString = QString::number(byte.toDouble()/1000000.0, 'f', 2);
+    QString gbString = QString::number(byte.toDouble()/1000000000.0, 'f', 2);
+    QString leftoverString = QString::number(totalTraffic - byte.toDouble()/1000000000.0, 'f',2 );
     int totalSec = sec.toInt();
     int hour = (totalSec/3600);
     int min = ((totalSec-hour*3600)/60);
@@ -268,5 +297,19 @@ void MainTray::handleInfo(QString mb, QString sec, QString balance, QString ip)
     timeAction->setText(tr("已用时长:\t") + QString::number(hour) + ":" +QString::number(min) + ":" + second);
     balanceAction->setText(tr("账户余额:\t") + balance);
     ipAction->setText(tr("IP地址:\t") + ip);
+    if(!hasWarned){
+        hasWarned = true;
+        if(byte.toDouble() / 1000000.0 > totalTraffic * 1024){//流量已超
+            trafficstate = Over;
+            if(!muteAction->isChecked())
+                showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
+        }
+        else if(byte.toDouble() / 1000000.0 + 5000 > totalTraffic * 1024){//流量将超
+            trafficstate = Nearly;
+            if(!muteAction->isChecked())
+                showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
+        }
+        showToolTip(currentState);
+    }
 }
 

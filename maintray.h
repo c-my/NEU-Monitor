@@ -18,6 +18,7 @@ class MainTray: public QSystemTrayIcon
 public:
     MainTray(QByteArray username, QByteArray password, QObject *parent = Q_NULLPTR);
     ~MainTray();
+    enum TrafficState{Normal, Over, Nearly };
 
 private:
     QMenu *menu, *infoMenu, *settingsMenu;
@@ -30,8 +31,10 @@ private:
 
     bool isForceLogout = false;
     bool isForceLogin = false;
+    bool hasWarned = false;
 
     NetController::State currentState = NetController::Unknown;  //当前状态
+    TrafficState trafficstate = Normal;
 
     void showToolTip(NetController::State state);
     void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击、双击
@@ -40,6 +43,7 @@ private:
     void setAutoStart(bool set);
 
     QByteArray user, passwd;
+    int totalTraffic;
     int msgDur = 500;   //通知持续时间
     int checkInterval = 1000;   //查询状态定时器周期
 
@@ -48,7 +52,7 @@ signals:
     void exit();
 
 private slots:
-    void updateUserInfo(QByteArray id, QByteArray pass);
+    void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
 
 };
