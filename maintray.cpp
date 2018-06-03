@@ -205,7 +205,7 @@ void MainTray::showToolTip(NetController::State state)
     default:
         break;
     }
-    tooltipString += tr("\n自动重连：");
+    tooltipString += tr("\n自动登陆：");
     tooltipString += autoLogin->isChecked()? tr("开启"):tr("关闭");
     if(state == NetController::Online){
         switch (trafficstate) {
