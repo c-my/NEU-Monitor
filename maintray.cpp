@@ -36,13 +36,16 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
             logoutAction->setEnabled(true);
             break;
         case NetController::Offline:
-            if(!isForceLogin){
-                setIcon(QIcon(tr(":/icon/offline.ico")));
-                if(!muteAction->isChecked())
-                    showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-                loginAction->setEnabled(true);
-                logoutAction->setEnabled(true);
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
+            loginAction->setEnabled(true);
+            logoutAction->setEnabled(true);
+            //自动登陆
+            if(autoLogin->isChecked() && !isForceLogout){
+                loginAction->trigger();
             }
+
             break;
         case NetController::Disconnected:
             setIcon(QIcon(tr(":/icon/offline.ico")));
@@ -79,7 +82,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     //菜单Action
     loginAction = new QAction(tr("连接网络"),this);
     logoutAction = new QAction(tr("断开网络"),this);
-    autoLogin = new QAction(tr("自动重连"), this);
+    autoLogin = new QAction(tr("自动登陆"), this);
     optionsAction = new QAction(tr("选项"), this);
     bootAction = new QAction(tr("开机启动"), this);
     muteAction = new QAction(tr("勿扰模式"), this);
@@ -158,10 +161,10 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     autoLoginTimer->start();
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
         netctrl->checkState();
-        //Offline状态下自动重连
-        if(currentState == NetController::Offline && autoLogin->isChecked() && !isForceLogout){
-            loginAction->trigger();
-        }
+//        //Offline状态下自动重连
+//        if(currentState == NetController::Offline && autoLogin->isChecked() && !isForceLogout){
+//            loginAction->trigger();
+//        }
     });
 
     showToolTip(currentState);
@@ -185,7 +188,7 @@ void MainTray::showToolTip(NetController::State state)
         tooltipString += tr("当前状态：连接");
         break;
     case NetController::Offline:
-        tooltipString += tr("当前状态：断开 （双击登陆）");
+        tooltipString += tr("当前状态：断开（双击登陆）");
         break;
     case NetController::Disconnected:
         tooltipString += tr("当前状态：无法连接");
