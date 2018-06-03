@@ -27,7 +27,9 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
+    saveButton->setDefault(true);
     cancleButton = new QPushButton("取消", this);
+    cancleButton->setShortcut(Qt::Key_Escape);
     hlayout->addWidget(saveButton);
     hlayout->addWidget(cancleButton);
 
