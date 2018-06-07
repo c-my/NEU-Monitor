@@ -7,9 +7,9 @@
 
 3. 双击托盘图标可以登录
 
-   ![](.\doc_pic\optionsWindow.png)
+   ![](optionsWindow.png)
 
-   ![](.\doc_pic\menu.png)
+   ![](menu.png)
 ## 自动登陆
 1. 在已经登陆的状态下检测到校园网状态变为断开，此时会进行重新登陆，重新登陆等同于在ipgw网页点击`断开连接`后再进行`连接网络`
 2. 首次启动应用时进行登陆
