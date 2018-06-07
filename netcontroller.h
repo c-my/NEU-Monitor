@@ -30,7 +30,7 @@ private:
     QByteArray checkParam, username, password;
     int traffic;
     State NEUState = Unknown, lastState = Unknown;
-    int offlineCount = 0, disconnectCount = 0;
+    int onlineCount = 0, offlineCount = 0, disconnectCount = 0;
 
     QNetworkAccessManager manager;
     QNetworkRequest request;
