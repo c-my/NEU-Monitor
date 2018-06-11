@@ -15,6 +15,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     idEdit->setText(id);
     passwordEdit = new QLineEdit(this);
     passwordEdit->setEchoMode(QLineEdit::Password);
+    passwordEdit->setContextMenuPolicy(Qt::NoContextMenu);
     passwordEdit->setText(pass);
 
     trafficSpin = new QSpinBox(this);

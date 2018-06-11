@@ -29,14 +29,14 @@ private:
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
     int traffic;
-    State NEUState = Unknown, lastState = Unknown;
+//    State NEUState = Unknown, lastState = Unknown;
     int onlineCount = 0, offlineCount = 0, disconnectCount = 0;
 
     QNetworkAccessManager manager;
     QNetworkRequest request;
 
 signals:
-    void stateChanged(State newState);
+    void sendState(State newState);
     void sendInfo(QString mb, QString sec, QString balance, QString ip);
 
 public slots:

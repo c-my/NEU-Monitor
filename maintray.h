@@ -29,6 +29,7 @@ private:
     OptionsWindow opWindow;
     QTimer *autoLoginTimer; //自动重连定时器
 
+
     bool isForceLogout = false;
     bool isForceLogin = false;
     bool hasWarned = false;
@@ -53,6 +54,7 @@ signals:
 
 private slots:
     void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
+    void handleState(NetController::State state);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
 
 };

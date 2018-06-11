@@ -25,51 +25,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
 
     connect(&opWindow, OptionsWindow::saveSettings, this, updateUserInfo);
     //连接controller状态改变信号
-    connect(netctrl, NetController::stateChanged, this, [this](NetController::State state){
-        switch (state) {
-        case NetController::Online:
-            isForceLogin = false;
-            setIcon(QIcon(tr(":/icon/favicon.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
-            loginAction->setEnabled(true);
-            logoutAction->setEnabled(true);
-            break;
-        case NetController::Offline:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-            loginAction->setEnabled(true);
-            logoutAction->setEnabled(true);
-            //自动登陆
-            if(autoLogin->isChecked() && !isForceLogout){
-                loginAction->trigger();
-            }
-
-            break;
-        case NetController::Disconnected:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
-            loginAction->setDisabled(true);
-            logoutAction->setDisabled(true);
-            break;
-        case NetController::WrongPass:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("登陆失败"),tr("密码错误"), this->icon(), msgDur);
-            break;
-        case NetController::Owed:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("登陆失败"),tr("已欠费"), this->icon(), msgDur);
-            break;
-        default:
-            break;
-        }
-        currentState = state;
-        showToolTip(state);
-    });
+    connect(netctrl, NetController::sendState, this, handleState);
 
 
     connect(this, QSystemTrayIcon::messageClicked, this, [this](){
@@ -161,10 +117,6 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     autoLoginTimer->start();
     connect(autoLoginTimer,QTimer::timeout, this, [this](){
         netctrl->checkState();
-//        //Offline状态下自动重连
-//        if(currentState == NetController::Offline && autoLogin->isChecked() && !isForceLogout){
-//            loginAction->trigger();
-//        }
     });
 
     showToolTip(currentState);
@@ -178,6 +130,7 @@ MainTray::~MainTray()
 {
     delete menu;
     delete infoMenu;
+    delete autoLoginTimer;
 }
 
 void MainTray::showToolTip(NetController::State state)
@@ -287,9 +240,60 @@ void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
     settings.setValue("total traffic", traffic);
 }
 
+void MainTray::handleState(NetController::State state)
+{
+    if(state!=currentState){
+        switch (state) {
+        case NetController::Online:
+            isForceLogin = false;
+            setIcon(QIcon(tr(":/icon/favicon.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
+            loginAction->setEnabled(true);
+            logoutAction->setEnabled(true);
+            break;
+        case NetController::Offline:
+            if(currentState == NetController::WrongPass || currentState == NetController::Owed)
+                return;
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
+            loginAction->setEnabled(true);
+            logoutAction->setEnabled(true);
+            //自动登陆
+            if(autoLogin->isChecked() && !isForceLogout){
+                loginAction->trigger();
+            }
+
+            break;
+        case NetController::Disconnected:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
+            loginAction->setDisabled(true);
+            logoutAction->setDisabled(true);
+            break;
+        case NetController::WrongPass:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("登陆失败"),tr("密码错误"), this->icon(), msgDur);
+            break;
+        case NetController::Owed:
+            setIcon(QIcon(tr(":/icon/offline.ico")));
+            if(!muteAction->isChecked())
+                showMessage(tr("登陆失败"),tr("已欠费"), this->icon(), msgDur);
+            break;
+        default:
+            break;
+        }
+        currentState = state;
+        showToolTip(state);
+    }
+}
+
 void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip)
 {
-    QString mbString = QString::number(byte.toDouble()/1000000.0, 'f', 2);
+    QString mbString = QString::number(byte.toDouble()/1048576.0, 'f', 2);
     QString gbString = QString::number(byte.toDouble()/1000000000.0, 'f', 2);
     QString leftoverString = QString::number(totalTraffic - byte.toDouble()/1000000000.0, 'f',2 );
     int totalSec = sec.toInt();
@@ -302,12 +306,12 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     ipAction->setText(tr("IP地址:\t") + ip);
     if(!hasWarned){
         hasWarned = true;
-        if(byte.toDouble() / 1000000.0 > totalTraffic * 1024){//流量已超
+        if(byte.toDouble() / 1048576.0 > totalTraffic * 1024){//流量已超
             trafficstate = Over;
             if(!muteAction->isChecked())
                 showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
         }
-        else if(byte.toDouble() / 1000000.0 + 5000 > totalTraffic * 1024){//流量将超
+        else if(byte.toDouble() / 1048576.0 + 5000 > totalTraffic * 1024){//流量将超
             trafficstate = Nearly;
             if(!muteAction->isChecked())
                 showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
