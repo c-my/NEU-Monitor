@@ -11,6 +11,8 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QApplication>
+#include <QFile>
+#include <QDebug>
 
 class MainTray: public QSystemTrayIcon
 {
@@ -28,7 +30,8 @@ private:
     QSettings settings;
     OptionsWindow opWindow;
     QTimer *autoLoginTimer; //自动重连定时器
-
+    QFile *logFile;
+    QTextStream *logOut;
 
     bool isForceLogout = false;
     bool isForceLogin = false;
@@ -56,6 +59,7 @@ private slots:
     void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
     void handleState(NetController::State state);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
+    void writeLog(QString content);
 
 };
 

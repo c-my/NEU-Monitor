@@ -12,16 +12,24 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     user(username),
     passwd(password)
 {
+    logFile = new QFile(tr("NEU_Monitor.log"));
+    if(!logFile->open(QIODevice::Append | QIODevice::Text))
+        showMessage(tr("警告"), tr("日志文件打开失败"));
+    logOut = new QTextStream(logFile);
+    writeLog(tr("Open logfile [") + logFile->fileName() + tr("] successfully."));
     opWindow.hide();
     setIcon(QIcon(tr(":/icon/favicon.ico")));
 
     netctrl = new NetController(user,passwd,this);
+    connect(netctrl, NetController::sendLog, this, writeLog);
     user = settings.value("id",0).toByteArray();
     passwd = settings.value("password", 0).toByteArray();
     totalTraffic = settings.value("total traffic", 60).toInt();
     netctrl->setUsername(user);
     netctrl->setPassword(passwd);
     netctrl->setTotalTraffic(totalTraffic);
+
+    writeLog(tr("Load username[")+user+tr("] traffic[")+QString::number(totalTraffic) + tr("]."));
 
     connect(&opWindow, OptionsWindow::saveSettings, this, updateUserInfo);
     //连接controller状态改变信号
@@ -57,6 +65,7 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, QAction::triggered, this,[this](){
+        writeLog(tr("Login triggered."));
         isForceLogin = true;
         netctrl->sendLogoutRequest();
         hasWarned = false;
@@ -64,24 +73,30 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
         isForceLogout = false;
     });
     connect(logoutAction, QAction::triggered, this,[this](){
+        writeLog(tr("Logout triggered."));
         netctrl->sendLogoutRequest();
         isForceLogout = true;
     });
     connect(autoLogin, QAction::toggled, this, [this](bool set){
+        writeLog(tr("Autologin turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isAutoLogin", set);
         isForceLogout = false;
         showToolTip(currentState);
     });
     connect(muteAction, QAction::toggled, this, [this](bool set){
+        writeLog(tr("Mute mode turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isMute", set);
     });
     connect(bootAction, QAction::toggled, this, [this](bool set){
+        writeLog(tr("Boot with system turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isOnBoot", set);
         setAutoStart(set);
     });
     connect(optionsAction, QAction::triggered, this, [this](){showOptions();});
     connect(aboutAction, QAction::triggered, this, showAbout);
-    connect(quitAction, QAction::triggered, this,[this](){emit exit();});
+    connect(quitAction, QAction::triggered, this,[this](){
+        writeLog(tr("Exit.\n\n"));
+        emit exit();});
 
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
@@ -131,6 +146,9 @@ MainTray::~MainTray()
     delete menu;
     delete infoMenu;
     delete autoLoginTimer;
+    logFile->close();
+    delete logFile;
+    delete logOut;
 }
 
 void MainTray::showToolTip(NetController::State state)
@@ -179,6 +197,7 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::DoubleClick:
+        writeLog(tr("Double click TrayIcon."));
         if(currentState == NetController::Offline)
             loginAction->trigger();
         break;
@@ -192,11 +211,13 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainTray::showOptions()
 {
+    writeLog(tr("Open options window."));
     opWindow.show();
 }
 
 void MainTray::showAbout()
 {
+    writeLog(tr("Open about window."));
     QMessageBox *aboutWindow = new QMessageBox();
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
@@ -226,6 +247,7 @@ void MainTray::setAutoStart(bool set)
 
 void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
 {
+    writeLog(tr("Set username[") + id + tr("]; Traffic: [") + QString::number(traffic) + tr("]."));
     netctrl->setUsername(id);
     netctrl->setPassword(pass);
     netctrl->setTotalTraffic(traffic);
@@ -243,6 +265,7 @@ void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
 void MainTray::handleState(NetController::State state)
 {
     if(state!=currentState){
+        writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
         switch (state) {
         case NetController::Online:
             isForceLogin = false;
@@ -287,6 +310,7 @@ void MainTray::handleState(NetController::State state)
             break;
         }
         currentState = state;
+        writeLog(tr("State change to [") + QString::number(currentState) + tr("]."));
         showToolTip(state);
     }
 }
@@ -317,6 +341,17 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
                 showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
         }
         showToolTip(currentState);
+    }
+}
+
+void MainTray::writeLog(QString content)
+{
+    if(logFile->isOpen())
+    {
+        *logOut<<QDateTime::currentDateTime().toString("[yyyy.MM.dd hh:mm:ss] ");
+        *logOut << content << "\n";
+//        qDebug()<<"Write log"<<content;
+        logOut->flush();
     }
 }
 
