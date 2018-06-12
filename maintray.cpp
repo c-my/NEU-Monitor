@@ -265,9 +265,9 @@ void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
 void MainTray::handleState(NetController::State state)
 {
     if(state!=currentState){
-        writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
         switch (state) {
         case NetController::Online:
+            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             isForceLogin = false;
             setIcon(QIcon(tr(":/icon/favicon.ico")));
             if(!muteAction->isChecked())
@@ -278,6 +278,7 @@ void MainTray::handleState(NetController::State state)
         case NetController::Offline:
             if(currentState == NetController::WrongPass || currentState == NetController::Owed)
                 return;
+            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(tr(":/icon/offline.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
@@ -290,6 +291,7 @@ void MainTray::handleState(NetController::State state)
 
             break;
         case NetController::Disconnected:
+            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(tr(":/icon/offline.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
@@ -297,12 +299,14 @@ void MainTray::handleState(NetController::State state)
             logoutAction->setDisabled(true);
             break;
         case NetController::WrongPass:
+            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(tr(":/icon/offline.ico")));
             if(!muteAction->isChecked())
                 showMessage(tr("登陆失败"),tr("密码错误"), this->icon(), msgDur);
             break;
         case NetController::Owed:
             setIcon(QIcon(tr(":/icon/offline.ico")));
+            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             if(!muteAction->isChecked())
                 showMessage(tr("登陆失败"),tr("已欠费"), this->icon(), msgDur);
             break;

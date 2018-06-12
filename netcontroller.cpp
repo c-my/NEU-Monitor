@@ -96,15 +96,15 @@ void NetController::handleResponse(QNetworkReply *reply)
     {
         QString loginPage(reply->readAll());
         if(loginPage.contains(QString("已欠费"))){//欠费
-            sendLog(tr("Get [Owed] Response."));
+            sendLog(tr("Get [Owed] response."));
             emit sendState(Owed);
         }
         else if(loginPage.contains("Password is error")){//密码错误
-            sendLog(tr("Get [Wrong Password] Response."));
+            sendLog(tr("Get [Wrong Password] response."));
             emit sendState(WrongPass);
         }
         else if(loginPage.contains("网络已连接")){//登陆成功
-            sendLog(tr("Get [Login success] Response."));
+            sendLog(tr("Get [Login success] response."));
             emit sendState(Online);
         }
     }

@@ -12,7 +12,6 @@
 #include <QTimer>
 #include <QApplication>
 #include <QFile>
-#include <QDebug>
 
 class MainTray: public QSystemTrayIcon
 {
