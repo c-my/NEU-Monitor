@@ -224,7 +224,7 @@ void MainTray::showAbout()
                              "<p>Based on Qt 5.11.0 (MinGW 5.3.0, 32bit)</p>"
                              "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
                             "Email: <address>"
-                            "<a href=\"mailto:cmy1113@yeah.net?subject=SerialAsst Feedback\">Cai.MY</a>"
+                            "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor Feedback\">Cai.MY</a>"
                             "</address>"));
     aboutWindow->show();
 }
