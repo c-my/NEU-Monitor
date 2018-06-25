@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QApplication>
 #include <QFile>
+#include <QtGlobal>
 
 class MainTray: public QSystemTrayIcon
 {
@@ -29,8 +30,10 @@ private:
     QSettings settings;
     OptionsWindow opWindow;
     QTimer *autoLoginTimer; //自动重连定时器
-    QFile *logFile;
-    QTextStream *logOut;
+    QString logFileName;
+    QFile logFile;
+    QString olIconPath = tr(":/icons/favicon.ico");
+    QString offIconPath = tr(":/icons/offline.ico");
 
     bool isForceLogout = false;
     bool isForceLogin = false;
@@ -50,6 +53,9 @@ private:
     int msgDur = 500;   //通知持续时间
     int checkInterval = 1000;   //查询状态定时器周期
 
+    int onlineCount = 0, offlineCount = 0, disCount = 0;
+
+    inline void clearCount();
 
 signals:
     void exit();
@@ -58,7 +64,8 @@ private slots:
     void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
     void handleState(NetController::State state);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
-    void writeLog(QString content);
+    void openLogFile();
+    void writeLog(QString content, bool timeStamp = true);
 
 };
 

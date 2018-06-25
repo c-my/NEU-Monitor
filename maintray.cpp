@@ -9,16 +9,15 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
     //初始化optionswindow
     opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray(), settings.value("total traffic", 60).toInt()),
+    logFileName("NEU_Monitor.log"),
+    logFile(logFileName, this),
     user(username),
     passwd(password)
 {
-    logFile = new QFile(tr("NEU_Monitor.log"));
-    if(!logFile->open(QIODevice::Append | QIODevice::Text))
-        showMessage(tr("警告"), tr("日志文件打开失败"));
-    logOut = new QTextStream(logFile);
-    writeLog(tr("Open logfile [") + logFile->fileName() + tr("] successfully."));
+    openLogFile();
+
     opWindow.hide();
-    setIcon(QIcon(tr(":/icon/favicon.ico")));
+    setIcon(QIcon(olIconPath));
 
     netctrl = new NetController(user,passwd,this);
     connect(netctrl, NetController::sendLog, this, writeLog);
@@ -146,9 +145,7 @@ MainTray::~MainTray()
     delete menu;
     delete infoMenu;
     delete autoLoginTimer;
-    logFile->close();
-    delete logFile;
-    delete logOut;
+    logFile.close();
 }
 
 void MainTray::showToolTip(NetController::State state)
@@ -221,16 +218,20 @@ void MainTray::showAbout()
     QMessageBox *aboutWindow = new QMessageBox();
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
+                            "<h3>Version: 1.4.1</h3>"
                              "<p>Based on Qt 5.11.0 (MinGW 5.3.0, 32bit)</p>"
                              "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
                             "Email: <address>"
-                            "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor Feedback\">Cai.MY</a>"
+                            "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor-v1.4.1 Feedback\">Cai.MY</a>"
                             "</address>"));
+    aboutWindow->setAttribute(Qt::WA_DeleteOnClose);
+    aboutWindow->setModal(false);
     aboutWindow->show();
 }
 
 void MainTray::setAutoStart(bool set)
 {
+#ifdef Q_OS_WIN32
     QString application_name = QApplication::applicationName();
     QSettings *settings = new QSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
     if(set)
@@ -243,6 +244,31 @@ void MainTray::setAutoStart(bool set)
         settings->remove(application_name);
     }
     delete settings;
+#endif
+
+#ifdef Q_OS_MACOS
+#endif
+
+#ifdef Q_OS_LINUX
+#endif
+}
+
+void MainTray::clearCount()
+{
+    onlineCount = 0;
+    offlineCount = 0;
+    disCount = 0;
+}
+
+void MainTray::openLogFile()
+{
+    if(!logFile.open(QIODevice::Append | QIODevice::Text)){
+        showMessage(tr("警告"), tr("日志文件打开失败"));
+//        return;
+    }
+    writeLog(tr("\n=================================================="), false);
+    writeLog(tr("Open logfile [") + logFile.fileName() + tr("] successfully."));
+    logFile.close();
 }
 
 void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
@@ -267,53 +293,68 @@ void MainTray::handleState(NetController::State state)
     if(state!=currentState){
         switch (state) {
         case NetController::Online:
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
-            isForceLogin = false;
-            setIcon(QIcon(tr(":/icon/favicon.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
-            loginAction->setEnabled(true);
-            logoutAction->setEnabled(true);
+            if(onlineCount++ > 1)
+            {
+                clearCount();
+                writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
+                isForceLogin = false;
+                setIcon(QIcon(olIconPath));
+                if(!muteAction->isChecked())
+                    showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
+                loginAction->setEnabled(true);
+                logoutAction->setEnabled(true);
+                currentState = state;
+            }
             break;
         case NetController::Offline:
-            if(currentState == NetController::WrongPass || currentState == NetController::Owed)
-                return;
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-            loginAction->setEnabled(true);
-            logoutAction->setEnabled(true);
-            //自动登陆
-            if(autoLogin->isChecked() && !isForceLogout){
-                loginAction->trigger();
+            if(offlineCount++ > 1)
+            {
+                clearCount();
+                if(currentState == NetController::WrongPass || currentState == NetController::Owed)
+                    return;
+                writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
+                setIcon(QIcon(offIconPath));
+                if(!muteAction->isChecked())
+                    showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
+                loginAction->setEnabled(true);
+                logoutAction->setEnabled(true);
+                //自动登陆
+                if(autoLogin->isChecked() && !isForceLogout){
+                    loginAction->trigger();
+                }
+                currentState = state;
             }
-
             break;
         case NetController::Disconnected:
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
-            setIcon(QIcon(tr(":/icon/offline.ico")));
-            if(!muteAction->isChecked())
-                showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
-            loginAction->setDisabled(true);
-            logoutAction->setDisabled(true);
+            if(disCount++ > 1)
+            {
+                clearCount();
+                writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
+                setIcon(QIcon(offIconPath));
+                if(!muteAction->isChecked())
+                    showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
+                loginAction->setDisabled(true);
+                logoutAction->setDisabled(true);
+                currentState = state;
+            }
             break;
         case NetController::WrongPass:
             writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
-            setIcon(QIcon(tr(":/icon/offline.ico")));
+            setIcon(QIcon(offIconPath));
             if(!muteAction->isChecked())
                 showMessage(tr("登陆失败"),tr("密码错误"), this->icon(), msgDur);
+            currentState = state;
             break;
         case NetController::Owed:
-            setIcon(QIcon(tr(":/icon/offline.ico")));
+            setIcon(QIcon(offIconPath));
             writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             if(!muteAction->isChecked())
                 showMessage(tr("登陆失败"),tr("已欠费"), this->icon(), msgDur);
+            currentState = state;
             break;
         default:
             break;
         }
-        currentState = state;
         writeLog(tr("State change to [") + QString::number(currentState) + tr("]."));
         showToolTip(state);
     }
@@ -348,14 +389,15 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     }
 }
 
-void MainTray::writeLog(QString content)
+void MainTray::writeLog(QString content, bool timeStamp)
 {
-    if(logFile->isOpen())
-    {
-        *logOut<<QDateTime::currentDateTime().toString("[yyyy.MM.dd hh:mm:ss] ");
-        *logOut << content << "\n";
+    if(!logFile.isOpen())
+    logFile.open(QIODevice::Append | QIODevice::Text);
+    if(timeStamp)
+        logFile.write(QDateTime::currentDateTime().toString("[yyyy.MM.dd hh:mm:ss] ").toUtf8());
+    logFile.write(content.toUtf8());
+    logFile.write(tr("\n").toUtf8());
 //        qDebug()<<"Write log"<<content;
-        logOut->flush();
-    }
+    logFile.close();
 }
 

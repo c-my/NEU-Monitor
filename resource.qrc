@@ -1,6 +1,8 @@
 <RCC>
-    <qresource prefix="/icon">
-        <file>favicon.ico</file>
-        <file>offline.ico</file>
+    <qresource prefix="/icon"/>
+    <qresource prefix="/">
+        <file>translations/qt_zh_CN.qm</file>
+        <file>icons/favicon.ico</file>
+        <file>icons/offline.ico</file>
     </qresource>
 </RCC>

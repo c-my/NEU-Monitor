@@ -38,7 +38,7 @@ private:
 signals:
     void sendState(State newState);
     void sendInfo(QString mb, QString sec, QString balance, QString ip);
-    void sendLog(QString content);
+    void sendLog(QString content, bool timeStamp = true);
 
 public slots:
     void handleResponse(QNetworkReply *reply);
