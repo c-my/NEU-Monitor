@@ -9,7 +9,9 @@
 #include <QPushButton>
 #include <QFormLayout>
 #include <QVBoxLayout>
+#include <QLabel>
 #include <QSettings>
+#include <QComboBox>
 
 class OptionsWindow : public QMainWindow
 {
@@ -20,12 +22,15 @@ public:
 private:
     QTabWidget *tabWidget;
     QWidget *page1;
-    QLineEdit *idEdit, *passwordEdit;
+    QComboBox *idCombo;
+    QLineEdit *passwordEdit;
     QSpinBox *trafficSpin;
     QPushButton *saveButton, *cancleButton;
     QFormLayout *layout;
     QVBoxLayout *vlayout;
     QHBoxLayout *hlayout;
+
+    QLabel *trafficLabel;
 
 signals:
     void saveSettings(QByteArray id, QByteArray pass, int traffic);

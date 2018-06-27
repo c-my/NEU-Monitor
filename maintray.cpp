@@ -57,6 +57,15 @@ MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent): Q
     balanceAction = new QAction(tr("账户余额: "),this);
     ipAction = new QAction(tr("IP地址: "),this);
 
+    connect(ipAction, QAction::triggered, this, [this](){
+        QStringList ipList = ipAction->text().split('\t');
+        if(ipList.size()>1)
+        {
+            QClipboard *clipBoard = QApplication::clipboard();
+            clipBoard->setText(ipList.at(1));
+        }
+    });
+
     autoLogin->setCheckable(true);
     bootAction->setCheckable(true);
     muteAction->setCheckable(true);
@@ -153,10 +162,10 @@ void MainTray::showToolTip(NetController::State state)
     QString tooltipString;
     switch (state) {
     case NetController::Online:
-        tooltipString += tr("当前状态：连接");
+        tooltipString += tr("当前状态：在线");
         break;
     case NetController::Offline:
-        tooltipString += tr("当前状态：断开（双击登陆）");
+        tooltipString += tr("当前状态：断开(双击登陆)");
         break;
     case NetController::Disconnected:
         tooltipString += tr("当前状态：无法连接");
@@ -301,8 +310,6 @@ void MainTray::handleState(NetController::State state)
                 setIcon(QIcon(olIconPath));
                 if(!muteAction->isChecked())
                     showMessage(tr("网络已连接"),tr("校园网登陆成功"), this->icon(), msgDur);
-                loginAction->setEnabled(true);
-                logoutAction->setEnabled(true);
                 currentState = state;
             }
             break;
@@ -316,8 +323,6 @@ void MainTray::handleState(NetController::State state)
                 setIcon(QIcon(offIconPath));
                 if(!muteAction->isChecked())
                     showMessage(tr("网络已断开"),tr("校园网已注销"), this->icon(), msgDur);
-                loginAction->setEnabled(true);
-                logoutAction->setEnabled(true);
                 //自动登陆
                 if(autoLogin->isChecked() && !isForceLogout){
                     loginAction->trigger();
@@ -333,8 +338,6 @@ void MainTray::handleState(NetController::State state)
                 setIcon(QIcon(offIconPath));
                 if(!muteAction->isChecked())
                     showMessage(tr("网络已断开"),tr("无法连接至校园网"), this->icon(), msgDur);
-                loginAction->setDisabled(true);
-                logoutAction->setDisabled(true);
                 currentState = state;
             }
             break;
@@ -365,15 +368,15 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     QString mbString = QString::number(byte.toDouble()/1048576.0, 'f', 2);
     QString gbString = QString::number(byte.toDouble()/1000000000.0, 'f', 2);
     QString leftoverString = QString::number(totalTraffic - byte.toDouble()/1000000000.0, 'f',2 );
-    int totalSec = sec.toInt();
-    int hour = (totalSec/3600);
+    double totalSec = sec.toDouble();
+    double hour = (totalSec/3600);
     int min = ((totalSec-hour*3600)/60);
     QString second = QString::number(totalSec-hour*3600-min*60);
     mbAction->setText(tr("已用流量:\t") + mbString + tr(" M"));
-    timeAction->setText(tr("已用时长:\t") + QString::number(hour) + ":" +QString::number(min) + ":" + second);
-    balanceAction->setText(tr("账户余额:\t") + balance);
+    timeAction->setText(tr("已用时长:\t") + QString::number(hour, 'f', 2) + tr(" 小时")/*+ ":" +QString::number(min) + ":" + second*/);
+    balanceAction->setText(tr("账户余额:\t") + balance + tr(" 元"));
     ipAction->setText(tr("IP地址:\t") + ip);
-    if(!hasWarned){
+    if(!hasWarned && totalTraffic <= 0){
         hasWarned = true;
         if(byte.toDouble() / 1048576.0 > totalTraffic * 1024){//流量已超
             trafficstate = Over;

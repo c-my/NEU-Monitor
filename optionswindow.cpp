@@ -11,24 +11,35 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
 
-    idEdit = new QLineEdit(this);
-    idEdit->setText(id);
+
+    idCombo = new QComboBox(this);
+    idCombo->setEditable(true);
+    idCombo->addItem(id);
+    idCombo->setCurrentText(id);
+
     passwordEdit = new QLineEdit(this);
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setContextMenuPolicy(Qt::NoContextMenu);
     passwordEdit->setText(pass);
+    passwordEdit->setToolTip(tr("密码仅用于登陆"));
+
 
     trafficSpin = new QSpinBox(this);
     trafficSpin->setValue(traffic);
-    trafficSpin->setToolTip(tr("在流量将要用尽时进行提醒"));
+    trafficSpin->setToolTip(tr("0为无限制"));
 
-    layout->addRow(tr("用户名"), idEdit);
+    trafficLabel = new QLabel(tr("流量(G)"), this);
+    trafficLabel->setToolTip(tr("在流量将要用尽时进行提醒"));
+
+    layout->addRow(tr("用户名"), /*idEdit*/idCombo);
+//    layout->addRow(idCombo);
     layout->addRow(tr("密码"), passwordEdit);
-    layout->addRow(tr("流量(G)"), trafficSpin);
+    layout->addRow(trafficLabel, trafficSpin);
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
     saveButton->setDefault(true);
+    saveButton->setToolTip(tr("保存设置并关闭"));
     cancleButton = new QPushButton("取消", this);
     cancleButton->setShortcut(Qt::Key_Escape);
     hlayout->addWidget(saveButton);
@@ -43,7 +54,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     tabWidget->addTab(page1, tr("常规"));
     setCentralWidget(tabWidget);
 
-    connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idEdit->text().toUtf8(),
+    connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idCombo->currentText().toUtf8(),
                                                                                passwordEdit->text().toUtf8(),
                                                                                trafficSpin->value());
                                                                                         });

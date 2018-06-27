@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QtGlobal>
+#include <QClipboard>
 
 class MainTray: public QSystemTrayIcon
 {
