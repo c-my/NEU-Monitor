@@ -16,10 +16,10 @@
 class OptionsWindow : public QMainWindow
 {
     Q_OBJECT
-public:
+  public:
     explicit OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent = nullptr);
 
-private:
+  private:
     QTabWidget *tabWidget;
     QWidget *page1;
     QComboBox *idCombo;
@@ -32,9 +32,9 @@ private:
 
     QLabel *trafficLabel;
 
-signals:
+  signals:
     void saveSettings(QByteArray id, QByteArray pass, int traffic);
-public slots:
+  public slots:
 };
 
 #endif // OPTIONSWINDOW_H

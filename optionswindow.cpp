@@ -1,6 +1,6 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidget *parent) : QMainWindow(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(tr("选项"));
 
@@ -10,7 +10,6 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     vlayout = new QVBoxLayout(page1);
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
-
 
     idCombo = new QComboBox(this);
     idCombo->setEditable(true);
@@ -23,7 +22,6 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     passwordEdit->setText(pass);
     passwordEdit->setToolTip(tr("密码仅用于登陆"));
 
-
     trafficSpin = new QSpinBox(this);
     trafficSpin->setValue(traffic);
     trafficSpin->setToolTip(tr("0为无限制"));
@@ -31,8 +29,8 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     trafficLabel = new QLabel(tr("流量(G)"), this);
     trafficLabel->setToolTip(tr("在流量将要用尽时进行提醒"));
 
-    layout->addRow(tr("用户名"), /*idEdit*/idCombo);
-//    layout->addRow(idCombo);
+    layout->addRow(tr("用户名"), /*idEdit*/ idCombo);
+    //    layout->addRow(idCombo);
     layout->addRow(tr("密码"), passwordEdit);
     layout->addRow(trafficLabel, trafficSpin);
     layout->setSpacing(20);
@@ -54,9 +52,10 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic,  QWidg
     tabWidget->addTab(page1, tr("常规"));
     setCentralWidget(tabWidget);
 
-    connect(saveButton, QPushButton::clicked, this, [this](){emit saveSettings(idCombo->currentText().toUtf8(),
-                                                                               passwordEdit->text().toUtf8(),
-                                                                               trafficSpin->value());
-                                                                                        });
+    connect(saveButton, QPushButton::clicked, this, [this]() {
+        emit saveSettings(idCombo->currentText().toUtf8(),
+                          passwordEdit->text().toUtf8(),
+                          trafficSpin->value());
+    });
     connect(cancleButton, QPushButton::clicked, this, hide);
 }

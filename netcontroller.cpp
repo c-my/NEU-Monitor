@@ -1,8 +1,8 @@
 #include "netcontroller.h"
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
-            username(id), password(passwd), manager(this)
-{    
+                                                                                  username(id), password(passwd), manager(this)
+{
     checkParam.append("action=get_online_info");
 
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
@@ -71,12 +71,12 @@ void NetController::handleResponse(QNetworkReply *reply)
 {
     QString url = reply->url().toString();
     reply->deleteLater();
-    if(url==checkUrl)
+    if (url == checkUrl)
     {
-        if(reply->error()==QNetworkReply::NoError)
+        if (reply->error() == QNetworkReply::NoError)
         {
             QString status = reply->readAll();
-            if(status==offlineString)
+            if (status == offlineString)
             {
                 emit sendState(Offline);
             }
@@ -92,18 +92,21 @@ void NetController::handleResponse(QNetworkReply *reply)
             emit sendState(Disconnected);
         }
     }
-    else if(url==loginUrl)
+    else if (url == loginUrl)
     {
         QString loginPage(reply->readAll());
-        if(loginPage.contains(QString("已欠费"))){//欠费
+        if (loginPage.contains(QString("已欠费")))
+        { //欠费
             sendLog(tr("Get [Owed] response."));
             emit sendState(Owed);
         }
-        else if(loginPage.contains("Password is error")){//密码错误
+        else if (loginPage.contains("Password is error"))
+        { //密码错误
             sendLog(tr("Get [Wrong Password] response."));
             emit sendState(WrongPass);
         }
-        else if(loginPage.contains("网络已连接")){//登陆成功
+        else if (loginPage.contains("网络已连接"))
+        { //登陆成功
             sendLog(tr("Get [Login success] response."));
             emit sendState(Online);
         }

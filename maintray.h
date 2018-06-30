@@ -15,15 +15,20 @@
 #include <QtGlobal>
 #include <QClipboard>
 
-class MainTray: public QSystemTrayIcon
+class MainTray : public QSystemTrayIcon
 {
     Q_OBJECT
-public:
+  public:
     MainTray(QByteArray username, QByteArray password, QObject *parent = Q_NULLPTR);
     ~MainTray();
-    enum TrafficState{Normal, Over, Nearly };
+    enum TrafficState
+    {
+        Normal,
+        Over,
+        Nearly
+    };
 
-private:
+  private:
     QMenu *menu, *infoMenu, *settingsMenu;
     QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *aboutAction, *quitAction;
     QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction;
@@ -40,34 +45,29 @@ private:
     bool isForceLogin = false;
     bool hasWarned = false;
 
-    NetController::State currentState = NetController::Unknown;  //当前状态
+    NetController::State currentState = NetController::Unknown; //当前状态
     TrafficState trafficstate = Normal;
 
     void showToolTip(NetController::State state);
-    void handleActivated(QSystemTrayIcon::ActivationReason reason);//处理左键单击、双击
-    void showOptions(); //显示选项窗口
-    void showAbout();   //显示关于窗口
+    void handleActivated(QSystemTrayIcon::ActivationReason reason); //处理左键单击、双击
+    void showOptions();                                             //显示选项窗口
+    void showAbout();                                               //显示关于窗口
     void setAutoStart(bool set);
 
     QByteArray user, passwd;
     int totalTraffic;
-    int msgDur = 500;   //通知持续时间
-    int checkInterval = 1000;   //查询状态定时器周期
+    int msgDur = 500;         //通知持续时间
+    int checkInterval = 1000; //查询状态定时器周期
 
-    int onlineCount = 0, offlineCount = 0, disCount = 0;
-
-    inline void clearCount();
-
-signals:
+  signals:
     void exit();
 
-private slots:
+  private slots:
     void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
     void handleState(NetController::State state);
     void handleInfo(QString mb, QString sec, QString balance, QString ip);
     void openLogFile();
     void writeLog(QString content, bool timeStamp = true);
-
 };
 
 #endif // MAINTRAY_H
