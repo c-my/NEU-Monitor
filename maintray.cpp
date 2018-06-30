@@ -302,7 +302,7 @@ void MainTray::handleState(NetController::State state)
     if(state!=currentState){
         switch (state) {
         case NetController::Online:
-            if(onlineCount++ > 1)
+            if(onlineCount++ > 0)
             {
                 clearCount();
                 writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
@@ -314,7 +314,7 @@ void MainTray::handleState(NetController::State state)
             }
             break;
         case NetController::Offline:
-            if(offlineCount++ > 1)
+            if(offlineCount++ > 0)
             {
                 clearCount();
                 if(currentState == NetController::WrongPass || currentState == NetController::Owed)
@@ -331,7 +331,7 @@ void MainTray::handleState(NetController::State state)
             }
             break;
         case NetController::Disconnected:
-            if(disCount++ > 1)
+            if(disCount++ > 0)
             {
                 clearCount();
                 writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
