@@ -1,28 +1,26 @@
 #include "maintray.h"
 
-MainTray::MainTray(QByteArray username, QByteArray password, QObject *parent) : QSystemTrayIcon(parent),
-                                                                                //初始化menu
-                                                                                menu(new QMenu()),
-                                                                                infoMenu(new QMenu()),
-                                                                                settingsMenu(new QMenu()),
-                                                                                //初始化settings
-                                                                                settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
-                                                                                //初始化optionswindow
-                                                                                opWindow(settings.value("id", "").toByteArray(), settings.value("password", "").toByteArray(), settings.value("total traffic", 60).toInt()),
-                                                                                logFileName("NEU_Monitor.log"),
-                                                                                logFile(logFileName, this),
-                                                                                user(username),
-                                                                                passwd(password)
+MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
+                                      //初始化menu
+                                      menu(new QMenu()),
+                                      infoMenu(new QMenu()),
+                                      settingsMenu(new QMenu()),
+                                      //初始化settings
+                                      settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
+                                      //初始化optionswindow
+                                      opWindow(settings.value("id", "").toByteArray(), QByteArray::fromBase64(settings.value("password", "").toByteArray()), settings.value("total traffic", 60).toInt()),
+                                      logFileName("NEU_Monitor.log"),
+                                      logFile(logFileName, this),
+                                      user(settings.value("id", "").toByteArray()),
+                                      passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray()))
 {
     openLogFile();
 
     opWindow.hide();
     setIcon(QIcon(olIconPath));
 
-    netctrl = new NetController(user, passwd, this);
+    netctrl = new NetController(user, passwd, this); //passwd为解密后密码
     connect(netctrl, NetController::sendLog, this, writeLog);
-    user = settings.value("id", 0).toByteArray();
-    passwd = settings.value("password", 0).toByteArray();
     totalTraffic = settings.value("total traffic", 60).toInt();
     netctrl->setUsername(user);
     netctrl->setPassword(passwd);
@@ -276,7 +274,7 @@ void MainTray::openLogFile()
     logFile.close();
 }
 
-void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
+void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic) //pass为未加密的密码
 {
     writeLog(tr("Set username[") + id + tr("]; Traffic: [") + QString::number(traffic) + tr("]."));
     netctrl->setUsername(id);
@@ -289,7 +287,7 @@ void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic)
     netctrl->sendLoginRequest();
     hasWarned = false;
     settings.setValue("id", id);
-    settings.setValue("password", pass);
+    settings.setValue("password", pass.toBase64());
     settings.setValue("total traffic", traffic);
 }
 

@@ -19,7 +19,7 @@ class MainTray : public QSystemTrayIcon
 {
     Q_OBJECT
   public:
-    MainTray(QByteArray username, QByteArray password, QObject *parent = Q_NULLPTR);
+    MainTray(QObject *parent = Q_NULLPTR);
     ~MainTray();
     enum TrafficState
     {
