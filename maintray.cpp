@@ -61,6 +61,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
             QClipboard *clipBoard = QApplication::clipboard();
             clipBoard->setText(ipList.at(1));
         }
+        showMessage(tr("复制成功"), tr("IP地址已复制到剪切板"));
     });
 
     autoLogin->setCheckable(true);
@@ -162,7 +163,7 @@ void MainTray::showToolTip(NetController::State state)
         tooltipString += tr("当前状态：在线");
         break;
     case NetController::Offline:
-        tooltipString += tr("当前状态：断开(双击登陆)");
+        tooltipString += tr("当前状态：断开");
         break;
     case NetController::Disconnected:
         tooltipString += tr("当前状态：无法连接");
@@ -205,7 +206,13 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
     case QSystemTrayIcon::DoubleClick:
         writeLog(tr("Double click TrayIcon."));
         if (currentState == NetController::Offline)
+        {
             loginAction->trigger();
+        }
+        else if (currentState == NetController::Online)
+        {
+            logoutAction->trigger();
+        }
         break;
     case QSystemTrayIcon::Trigger:
         contextMenu()->popup(this->geometry().topRight());
@@ -228,7 +235,7 @@ void MainTray::showAbout()
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                             "<h3>Version: 1.4.1</h3>"
-                            "<p>Based on Qt 5.11.0 (MinGW 5.3.0, 32bit)</p>"
+                            "<p>Based on Qt 5.11.1 (MinGW 5.3.0, 32bit)</p>"
                             "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
                             "Email: <address>"
                             "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor-v1.4.1 Feedback\">Cai.MY</a>"
@@ -315,7 +322,8 @@ void MainTray::handleState(NetController::State state)
             //自动登陆
             if (autoLogin->isChecked() && !isForceLogout)
             {
-                loginAction->trigger();
+                QTimer::singleShot(1000, loginAction, SLOT(trigger()));
+//                loginAction->trigger();
             }
             currentState = state;
             break;

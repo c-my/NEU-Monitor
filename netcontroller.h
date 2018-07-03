@@ -32,12 +32,11 @@ class NetController : public QObject
     };
 
   private:
-    QString checkUrl = "http://ipgw.neu.edu.cn/include/auth_action.php";
-    QString loginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
+    QString checkUrl = "https://ipgw.neu.edu.cn/include/auth_action.php";
+    QString loginUrl = "https://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
     int traffic;
-    //    State NEUState = Unknown, lastState = Unknown;
     int onlineCount = 0, offlineCount = 0, disconnectCount = 0;
 
     QNetworkAccessManager manager;
