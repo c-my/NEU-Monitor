@@ -11,10 +11,8 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     layout = new QFormLayout();
     hlayout = new QHBoxLayout();
 
-    idCombo = new QComboBox(this);
-    idCombo->setEditable(true);
-    idCombo->addItem(id);
-    idCombo->setCurrentText(id);
+    idEdit = new QLineEdit(this);
+    idEdit->setText(id);
 
     passwordEdit = new QLineEdit(this);
     passwordEdit->setEchoMode(QLineEdit::Password);
@@ -29,8 +27,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     trafficLabel = new QLabel(tr("流量(G)"), this);
     trafficLabel->setToolTip(tr("在流量将要用尽时进行提醒"));
 
-    layout->addRow(tr("用户名"), /*idEdit*/ idCombo);
-    //    layout->addRow(idCombo);
+    layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
     layout->addRow(trafficLabel, trafficSpin);
     layout->setSpacing(20);
@@ -53,7 +50,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     setCentralWidget(tabWidget);
 
     connect(saveButton, QPushButton::clicked, this, [this]() {
-        emit saveSettings(idCombo->currentText().toUtf8(),
+        emit saveSettings(idEdit->text().toUtf8(),
                           passwordEdit->text().toUtf8(),
                           trafficSpin->value());
     });

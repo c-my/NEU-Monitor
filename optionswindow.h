@@ -11,7 +11,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QSettings>
-#include <QComboBox>
 
 class OptionsWindow : public QMainWindow
 {
@@ -22,8 +21,7 @@ class OptionsWindow : public QMainWindow
   private:
     QTabWidget *tabWidget;
     QWidget *page1;
-    QComboBox *idCombo;
-    QLineEdit *passwordEdit;
+    QLineEdit *idEdit, *passwordEdit;
     QSpinBox *trafficSpin;
     QPushButton *saveButton, *cancleButton;
     QFormLayout *layout;
