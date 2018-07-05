@@ -5,17 +5,32 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
 {
     checkParam.append("action=get_online_info");
 
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    request.setHeader(QNetworkRequest::ContentLengthHeader, "100");
-    request.setRawHeader("Host", "ipgw.neu.edu.cn");
-    request.setRawHeader("Cache-Control", "max-age=0");
-    request.setRawHeader("Origin", "http://ipgw.neu.edu.cn");
-    request.setRawHeader("Upgrade-Insecure-Requests", "1");
-    request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36");
-    request.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-    request.setRawHeader("Referer", "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&");
-    request.setRawHeader("Accept-Encoding", "gzip, deflate");
-    request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9");
+    desktopRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    desktopRequest.setHeader(QNetworkRequest::ContentLengthHeader, "100");
+    desktopRequest.setRawHeader("Host", "ipgw.neu.edu.cn");
+    desktopRequest.setRawHeader("Cache-Control", "max-age=0");
+    desktopRequest.setRawHeader("Origin", "http://ipgw.neu.edu.cn");
+    desktopRequest.setRawHeader("Upgrade-Insecure-Requests", "1");
+    desktopRequest.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36");
+    desktopRequest.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+    desktopRequest.setRawHeader("Referer", "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&");
+    desktopRequest.setRawHeader("Accept-Encoding", "gzip, deflate");
+    desktopRequest.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9");
+
+
+    mobileRequest.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+    mobileRequest.setRawHeader("Accept-Encoding", "gzip, deflate");
+    mobileRequest.setRawHeader("Accept-Language", "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7");
+    mobileRequest.setRawHeader("Cache-Control", "max-age=0");
+//    mobileRequest.setHeader(QNetworkRequest::ContentLengthHeader, "85"); //XXX:这行一定不能有
+    mobileRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    mobileRequest.setRawHeader("Host", "ipgw.neu.edu.cn");
+    mobileRequest.setRawHeader("Origin", "http://ipgw.neu.edu.cn");
+    mobileRequest.setRawHeader("Proxy-Connection", "keep-alive");
+    mobileRequest.setRawHeader("Referer", "http://ipgw.neu.edu.cn/srun_portal_phone.php?ac_id=1&");
+    mobileRequest.setRawHeader("Upgrade-Insecure-Requests", "1");
+    mobileRequest.setRawHeader("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Mobile Safari/537.36");
+
 
     connect(&manager, &QNetworkAccessManager::finished, this, &NetController::handleResponse);
 }
@@ -27,14 +42,13 @@ void NetController::checkState()
 
 void NetController::sendCheckRequest()
 {
-    request.setUrl(QUrl(checkUrl));
-    manager.post(request, checkParam);
+    desktopRequest.setUrl(QUrl(checkUrl));
+    manager.post(desktopRequest, checkParam);
 }
 
-void NetController::sendLoginRequest()
+void NetController::sendLoginRequest(bool isMobile)
 {
     sendLog(tr("Send login request. [") + username + tr("]"));
-    request.setUrl(QUrl(loginUrl));
 
     QByteArray loginParam;
     loginParam.append("action=login&");
@@ -48,23 +62,43 @@ void NetController::sendLoginRequest()
     loginParam.append("username=");
     loginParam.append(username);
 
-    manager.post(request, loginParam);
+    if(!isMobile)
+    {
+        desktopRequest.setUrl(QUrl(desktopLoginUrl));
+        manager.post(desktopRequest, loginParam);
+    }
+    else
+    {
+        mobileRequest.setUrl(QUrl(mobileLoginUrl));
+        manager.post(mobileRequest, loginParam);
+    }
 }
 
-void NetController::sendLogoutRequest()
+void NetController::sendLogoutRequest(bool isAll, bool isMobile)
 {
     sendLog(tr("Send logout request. [") + username + tr("]"));
-    request.setUrl(QUrl(loginUrl));
 
     QByteArray logoutParam;
     logoutParam.append("action=logout&");
     logoutParam.append("ajax=1&");
-    logoutParam.append("password=");
-    logoutParam.append(password);
-    logoutParam.append("&username=");
+    if(isAll)
+    {
+        logoutParam.append("password=");//有password是全部断开
+        logoutParam.append(password);
+        logoutParam.append("&");
+    }
+    logoutParam.append("username=");
     logoutParam.append(username);
-
-    manager.post(request, logoutParam);
+    if(!isMobile)
+    {
+        desktopRequest.setUrl(QUrl(desktopLoginUrl));
+        manager.post(desktopRequest, logoutParam);
+    }
+    else
+    {
+        mobileRequest.setUrl(QUrl(mobileLoginUrl));//TODO:测试这样logout是否会影响pc端
+        manager.post(mobileRequest, logoutParam);
+    }
 }
 
 void NetController::handleResponse(QNetworkReply *reply)
@@ -92,7 +126,7 @@ void NetController::handleResponse(QNetworkReply *reply)
             emit sendState(Disconnected);
         }
     }
-    else if (url == loginUrl)
+    else if (url == desktopLoginUrl)
     {
         QString loginPage(reply->readAll());
         if (loginPage.contains(QString("已欠费")))
@@ -111,4 +145,8 @@ void NetController::handleResponse(QNetworkReply *reply)
             emit sendState(Online);
         }
     }
+//    else if (url == mobileLoginUrl)
+//    {
+//        qDebug()<<reply->readAll().toStdString();
+//    }
 }

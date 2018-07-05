@@ -14,8 +14,8 @@ class NetController : public QObject
     explicit NetController(QByteArray username, QByteArray password, QObject *parent = nullptr);
     void checkState();
     void sendCheckRequest();
-    void sendLoginRequest();
-    void sendLogoutRequest();
+    void sendLoginRequest(bool isMobile=false);
+    void sendLogoutRequest(bool isAll=false, bool isMobile=false);
 
     void setUsername(QByteArray newName) { username = newName; }
     void setPassword(QByteArray newPass) { password = newPass; }
@@ -33,14 +33,15 @@ class NetController : public QObject
 
   private:
     QString checkUrl = "http://ipgw.neu.edu.cn/include/auth_action.php";
-    QString loginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
+    QString desktopLoginUrl = "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&";
+    QString mobileLoginUrl = "http://ipgw.neu.edu.cn/srun_portal_phone.php?ac_id=1&";
     QString offlineString = "not_online";
     QByteArray checkParam, username, password;
     int traffic;
     int onlineCount = 0, offlineCount = 0, disconnectCount = 0;
 
     QNetworkAccessManager manager;
-    QNetworkRequest request;
+    QNetworkRequest desktopRequest, mobileRequest;
 
   signals:
     void sendState(State newState);
