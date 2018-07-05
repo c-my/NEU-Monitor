@@ -49,10 +49,10 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     tabWidget->addTab(page1, tr("常规"));
     setCentralWidget(tabWidget);
 
-    connect(saveButton, QPushButton::clicked, this, [this]() {
+    connect(saveButton, &QPushButton::clicked, this, [this]() {
         emit saveSettings(idEdit->text().toUtf8(),
                           passwordEdit->text().toUtf8(),
                           trafficSpin->value());
     });
-    connect(cancleButton, QPushButton::clicked, this, hide);
+    connect(cancleButton, &QPushButton::clicked, this, &OptionsWindow::hide);
 }
