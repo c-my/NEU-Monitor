@@ -204,6 +204,7 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
     switch (reason)
     {
     case QSystemTrayIcon::DoubleClick:
+    case QSystemTrayIcon::MiddleClick:
         writeLog(tr("Double click TrayIcon."));
         if (currentState == NetController::Offline)
         {
@@ -268,22 +269,26 @@ void MainTray::setAutoStart(bool set)
 #ifdef Q_OS_LINUX
     QString path = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.config/autostart";
     QFile file(path + "/ipgw.desktop");
-    if(!file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+    if (!file.open(QIODevice::ReadWrite | QIODevice::Text))
+    {
         showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
         return;
     }
-    if (set) {
+    if (set)
+    {
         QTextStream in(&file);
-        in << "[Desktop Entry]\n" <<
-              "Type=Application\n" <<
-              "Version=1.0\n" <<
-              "Name=NEU-Monitor\n" <<
-              "Comment=NEU-Monitor startup script\n"<<
-              "Exec=" << qApp->applicationFilePath() << " --hidden\n"<<
-              "StartupNotify=false\n"<<
-              "Terminal=false\n";
+        in << "[Desktop Entry]\n"
+           << "Type=Application\n"
+           << "Version=1.0\n"
+           << "Name=NEU-Monitor\n"
+           << "Comment=NEU-Monitor startup script\n"
+           << "Exec=" << qApp->applicationFilePath() << " --hidden\n"
+           << "StartupNotify=false\n"
+           << "Terminal=false\n";
         file.close();
-    } else {
+    }
+    else
+    {
         file.remove();
     }
 #endif
@@ -343,7 +348,7 @@ void MainTray::handleState(NetController::State state)
             if (autoLogin->isChecked() && !isForceLogout)
             {
                 QTimer::singleShot(1000, loginAction, SLOT(trigger()));
-//                loginAction->trigger();
+                //                loginAction->trigger();
             }
             currentState = state;
             break;
