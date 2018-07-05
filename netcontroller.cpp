@@ -17,7 +17,7 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
     request.setRawHeader("Accept-Encoding", "gzip, deflate");
     request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9");
 
-    connect(&manager, QNetworkAccessManager::finished, this, handleResponse);
+    connect(&manager, &QNetworkAccessManager::finished, this, &NetController::handleResponse);
 }
 
 void NetController::checkState()

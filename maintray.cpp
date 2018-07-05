@@ -20,7 +20,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     setIcon(QIcon(olIconPath));
 
     netctrl = new NetController(user, passwd, this); //passwd为解密后密码
-    connect(netctrl, NetController::sendLog, this, writeLog);
+    connect(netctrl, &NetController::sendLog, this, &MainTray::writeLog);
     totalTraffic = settings.value("total traffic", 60).toInt();
     netctrl->setUsername(user);
     netctrl->setPassword(passwd);
@@ -28,16 +28,16 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
 
     writeLog(tr("Load username[") + user + tr("] traffic[") + QString::number(totalTraffic) + tr("]."));
 
-    connect(&opWindow, OptionsWindow::saveSettings, this, updateUserInfo);
+    connect(&opWindow, &OptionsWindow::saveSettings, this, &MainTray::updateUserInfo);
     //连接controller状态改变信号
-    connect(netctrl, NetController::sendState, this, handleState);
+    connect(netctrl, &NetController::sendState, this, &MainTray::handleState);
 
-    connect(this, QSystemTrayIcon::messageClicked, this, [this]() {
+    connect(this, &QSystemTrayIcon::messageClicked, this, [this]() {
         if (currentState == NetController::WrongPass)
             opWindow.show();
     });
 
-    connect(netctrl, NetController::sendInfo, this, handleInfo);
+    connect(netctrl, &NetController::sendInfo, this, &MainTray::handleInfo);
 
     //菜单Action
     loginAction = new QAction(tr("连接网络"), this);
@@ -54,7 +54,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     balanceAction = new QAction(tr("账户余额: "), this);
     ipAction = new QAction(tr("IP地址: "), this);
 
-    connect(ipAction, QAction::triggered, this, [this]() {
+    connect(ipAction, &QAction::triggered, this, [this]() {
         QStringList ipList = ipAction->text().split('\t');
         if (ipList.size() > 1)
         {
@@ -70,7 +70,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
 
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
-    connect(loginAction, QAction::triggered, this, [this]() {
+    connect(loginAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Login triggered."));
         isForceLogin = true;
         netctrl->sendLogoutRequest();
@@ -78,29 +78,29 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
         netctrl->sendLoginRequest();
         isForceLogout = false;
     });
-    connect(logoutAction, QAction::triggered, this, [this]() {
+    connect(logoutAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Logout triggered."));
         netctrl->sendLogoutRequest();
         isForceLogout = true;
     });
-    connect(autoLogin, QAction::toggled, this, [this](bool set) {
+    connect(autoLogin, &QAction::toggled, this, [this](bool set) {
         writeLog(tr("Autologin turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isAutoLogin", set);
         isForceLogout = false;
         showToolTip(currentState);
     });
-    connect(muteAction, QAction::toggled, this, [this](bool set) {
+    connect(muteAction, &QAction::toggled, this, [this](bool set) {
         writeLog(tr("Mute mode turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isMute", set);
     });
-    connect(bootAction, QAction::toggled, this, [this](bool set) {
+    connect(bootAction, &QAction::toggled, this, [this](bool set) {
         writeLog(tr("Boot with system turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isOnBoot", set);
         setAutoStart(set);
     });
-    connect(optionsAction, QAction::triggered, this, [this]() { showOptions(); });
-    connect(aboutAction, QAction::triggered, this, showAbout);
-    connect(quitAction, QAction::triggered, this, [this]() {
+    connect(optionsAction, &QAction::triggered, this, [this]() { showOptions(); });
+    connect(aboutAction, &QAction::triggered, this, &MainTray::showAbout);
+    connect(quitAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Exit.\n\n"));
         emit exit(); });
 
@@ -129,13 +129,13 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
 
     setContextMenu(menu);
 
-    connect(this, activated, this, handleActivated);
-    connect(this, exit, this, [this]() { setVisible(false); });
+    connect(this, &MainTray::activated, this, &MainTray::handleActivated);
+    connect(this, &MainTray::exit, this, [this]() { setVisible(false); });
 
     autoLoginTimer = new QTimer(this);
     autoLoginTimer->setInterval(checkInterval);
     autoLoginTimer->start();
-    connect(autoLoginTimer, QTimer::timeout, this, [this]() {
+    connect(autoLoginTimer, &QTimer::timeout, this, [this]() {
         netctrl->checkState();
     });
 
@@ -266,6 +266,26 @@ void MainTray::setAutoStart(bool set)
 #endif
 
 #ifdef Q_OS_LINUX
+    QString path = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.config/autostart";
+    QFile file(path + "/ipgw.desktop");
+    if(!file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
+        return;
+    }
+    if (set) {
+        QTextStream in(&file);
+        in << "[Desktop Entry]\n" <<
+              "Type=Application\n" <<
+              "Version=1.0\n" <<
+              "Name=NEU-Monitor\n" <<
+              "Comment=NEU-Monitor startup script\n"<<
+              "Exec=" << qApp->applicationFilePath() << " --hidden\n"<<
+              "StartupNotify=false\n"<<
+              "Terminal=false\n";
+        file.close();
+    } else {
+        file.remove();
+    }
 #endif
 }
 

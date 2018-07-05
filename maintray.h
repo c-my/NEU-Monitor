@@ -14,6 +14,8 @@
 #include <QFile>
 #include <QtGlobal>
 #include <QClipboard>
+#include <QStandardPaths>
+#include <QDebug>
 
 class MainTray : public QSystemTrayIcon
 {
