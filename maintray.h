@@ -15,7 +15,6 @@
 #include <QtGlobal>
 #include <QClipboard>
 #include <QStandardPaths>
-#include <QDebug>
 
 class MainTray : public QSystemTrayIcon
 {
@@ -33,7 +32,7 @@ class MainTray : public QSystemTrayIcon
   private:
     QMenu *menu, *infoMenu, *settingsMenu;
     QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *aboutAction, *quitAction;
-    QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction;
+    QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction, *mobileAction;
     NetController *netctrl;
     QSettings settings;
     OptionsWindow opWindow;

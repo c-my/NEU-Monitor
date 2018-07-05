@@ -46,6 +46,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     optionsAction = new QAction(tr("选项"), this);
     bootAction = new QAction(tr("开机启动"), this);
     muteAction = new QAction(tr("勿扰模式"), this);
+    mobileAction = new QAction(tr("作为移动端"), this);
     aboutAction = new QAction(tr("关于"), this);
     quitAction = new QAction(tr("退出"), this);
 
@@ -61,26 +62,30 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
             QClipboard *clipBoard = QApplication::clipboard();
             clipBoard->setText(ipList.at(1));
         }
-        showMessage(tr("复制成功"), tr("IP地址已复制到剪切板"));
+        if(!muteAction->isChecked())
+        {
+            showMessage(tr("复制成功"), tr("IP地址已复制到剪切板"));
+        }
     });
 
     autoLogin->setCheckable(true);
     bootAction->setCheckable(true);
     muteAction->setCheckable(true);
+    mobileAction->setCheckable(true);
 
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Login triggered."));
         isForceLogin = true;
-        netctrl->sendLogoutRequest();
+        netctrl->sendLogoutRequest(true, mobileAction->isChecked());
         hasWarned = false;
-        netctrl->sendLoginRequest();
+        netctrl->sendLoginRequest(mobileAction->isChecked());
         isForceLogout = false;
     });
     connect(logoutAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Logout triggered."));
-        netctrl->sendLogoutRequest();
+        netctrl->sendLogoutRequest(false, mobileAction->isChecked());
         isForceLogout = true;
     });
     connect(autoLogin, &QAction::toggled, this, [this](bool set) {
@@ -107,9 +112,11 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
     muteAction->setChecked(settings.value("isMute", false).toBool());
+    mobileAction->setChecked(settings.value("isMobile", false).toBool());
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
+    settingsMenu->addAction(mobileAction);
     settingsMenu->addAction(muteAction);
     settingsMenu->addAction(bootAction);
 
@@ -271,8 +278,11 @@ void MainTray::setAutoStart(bool set)
     QFile file(path + "/ipgw.desktop");
     if (!file.open(QIODevice::ReadWrite | QIODevice::Text))
     {
-        showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
-        return;
+        if(!muteAction->isChecked())
+        {
+            showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
+            return;
+        }
     }
     if (set)
     {
@@ -298,7 +308,10 @@ void MainTray::openLogFile()
 {
     if (!logFile.open(QIODevice::Append | QIODevice::Text))
     {
-        showMessage(tr("警告"), tr("日志文件打开失败"));
+        if(!muteAction->isChecked())
+        {
+            showMessage(tr("警告"), tr("日志文件打开失败"));
+        }
         //        return;
     }
     writeLog(tr("\n=================================================="), false);
@@ -394,20 +407,24 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     timeAction->setText(tr("已用时长:\t") + QString::number(hour, 'f', 2) + tr(" 小时") /*+ ":" +QString::number(min) + ":" + second*/);
     balanceAction->setText(tr("账户余额:\t") + balance + tr(" 元"));
     ipAction->setText(tr("IP地址:\t") + ip);
-    if (!hasWarned && totalTraffic <= 0)
+    if (!hasWarned && totalTraffic > 0)
     {
         hasWarned = true;
         if (byte.toDouble() / 1048576.0 > totalTraffic * 1024)
         { //流量已超
             trafficstate = Over;
             if (!muteAction->isChecked())
-                showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
+                QTimer::singleShot(5000, this, [this]{
+                    showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
+                });
         }
         else if (byte.toDouble() / 1048576.0 + 5000 > totalTraffic * 1024)
         { //流量将超
             trafficstate = Nearly;
             if (!muteAction->isChecked())
-                showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
+                QTimer::singleShot(5000, this, [this, leftoverString]{
+                    showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
+                });
         }
         showToolTip(currentState);
     }
