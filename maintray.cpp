@@ -8,7 +8,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
                                       //初始化settings
                                       settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
                                       //初始化optionswindow
-                                      opWindow(settings.value("id", "").toByteArray(), QByteArray::fromBase64(settings.value("password", "").toByteArray()), settings.value("total traffic", 60).toInt()),
+                                      opWindow(settings.value("id", "").toByteArray(), QByteArray::fromBase64(settings.value("password", "").toByteArray()), settings.value("total traffic", 60).toInt(), settings.value("isMobile", false).toBool()),
                                       logFileName("NEU_Monitor.log"),
                                       logFile(logFileName, this),
                                       user(settings.value("id", "").toByteArray()),
@@ -46,7 +46,6 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     optionsAction = new QAction(tr("选项"), this);
     bootAction = new QAction(tr("开机启动"), this);
     muteAction = new QAction(tr("勿扰模式"), this);
-    mobileAction = new QAction(tr("作为移动端"), this);
     aboutAction = new QAction(tr("关于"), this);
     quitAction = new QAction(tr("退出"), this);
 
@@ -62,7 +61,7 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
             QClipboard *clipBoard = QApplication::clipboard();
             clipBoard->setText(ipList.at(1));
         }
-        if(!muteAction->isChecked())
+        if (!muteAction->isChecked())
         {
             showMessage(tr("复制成功"), tr("IP地址已复制到剪切板"));
         }
@@ -71,21 +70,21 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     autoLogin->setCheckable(true);
     bootAction->setCheckable(true);
     muteAction->setCheckable(true);
-    mobileAction->setCheckable(true);
 
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Login triggered."));
         isForceLogin = true;
-        netctrl->sendLogoutRequest(true, mobileAction->isChecked());
+        //        netctrl->sendLogoutRequest(true);
+        logoutAction->trigger();
         hasWarned = false;
-        netctrl->sendLoginRequest(mobileAction->isChecked());
+        netctrl->sendLoginRequest();
         isForceLogout = false;
     });
     connect(logoutAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Logout triggered."));
-        netctrl->sendLogoutRequest(false, mobileAction->isChecked());
+        netctrl->sendLogoutRequest(currentState != NetController::Online); //若不在线则断开全部链接
         isForceLogout = true;
     });
     connect(autoLogin, &QAction::toggled, this, [this](bool set) {
@@ -112,11 +111,9 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
     muteAction->setChecked(settings.value("isMute", false).toBool());
-    mobileAction->setChecked(settings.value("isMobile", false).toBool());
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
-    settingsMenu->addAction(mobileAction);
     settingsMenu->addAction(muteAction);
     settingsMenu->addAction(bootAction);
 
@@ -187,6 +184,7 @@ void MainTray::showToolTip(NetController::State state)
     default:
         break;
     }
+    tooltipString += tr("(") + (netctrl->getMobile() ? tr("Mobile") : tr("PC")) + tr(")");
     tooltipString += tr("\n自动登陆：");
     tooltipString += autoLogin->isChecked() ? tr("开启") : tr("关闭");
     if (state == NetController::Online)
@@ -278,7 +276,7 @@ void MainTray::setAutoStart(bool set)
     QFile file(path + "/ipgw.desktop");
     if (!file.open(QIODevice::ReadWrite | QIODevice::Text))
     {
-        if(!muteAction->isChecked())
+        if (!muteAction->isChecked())
         {
             showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
             return;
@@ -308,7 +306,7 @@ void MainTray::openLogFile()
 {
     if (!logFile.open(QIODevice::Append | QIODevice::Text))
     {
-        if(!muteAction->isChecked())
+        if (!muteAction->isChecked())
         {
             showMessage(tr("警告"), tr("日志文件打开失败"));
         }
@@ -319,21 +317,24 @@ void MainTray::openLogFile()
     logFile.close();
 }
 
-void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic) //pass为未加密的密码
+void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic, bool isMobile) //pass为未加密的密码
 {
     writeLog(tr("Set username[") + id + tr("]; Traffic: [") + QString::number(traffic) + tr("]."));
+    logoutAction->trigger(); //注销当前via old info
     netctrl->setUsername(id);
     netctrl->setPassword(pass);
     netctrl->setTotalTraffic(traffic);
+    netctrl->setMobile(isMobile);
     user = id;
     passwd = pass;
     totalTraffic = traffic;
     opWindow.hide();
-    netctrl->sendLoginRequest();
+    loginAction->trigger();
     hasWarned = false;
     settings.setValue("id", id);
     settings.setValue("password", pass.toBase64());
     settings.setValue("total traffic", traffic);
+    settings.setValue("isMobile", isMobile);
 }
 
 void MainTray::handleState(NetController::State state)
@@ -414,7 +415,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
         { //流量已超
             trafficstate = Over;
             if (!muteAction->isChecked())
-                QTimer::singleShot(5000, this, [this]{
+                QTimer::singleShot(5000, this, [this] {
                     showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
                 });
         }
@@ -422,7 +423,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
         { //流量将超
             trafficstate = Nearly;
             if (!muteAction->isChecked())
-                QTimer::singleShot(5000, this, [this, leftoverString]{
+                QTimer::singleShot(5000, this, [this, leftoverString] {
                     showMessage(tr("流量预警"), tr("剩余流量：") + leftoverString + tr("G"));
                 });
         }
