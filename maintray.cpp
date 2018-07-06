@@ -7,12 +7,13 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
                                       settingsMenu(new QMenu()),
                                       //初始化settings
                                       settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
-                                      //初始化optionswindow
-                                      opWindow(settings.value("id", "").toByteArray(), QByteArray::fromBase64(settings.value("password", "").toByteArray()), settings.value("total traffic", 60).toInt(), settings.value("isMobile", false).toBool()),
-                                      logFileName("NEU_Monitor.log"),
-                                      logFile(logFileName, this),
                                       user(settings.value("id", "").toByteArray()),
-                                      passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray()))
+                                      passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray())),
+                                      totalTraffic(settings.value("total traffic", 0).toInt()),
+                                      isMobile(settings.value("isMobile", false).toBool()),
+                                      opWindow(user, passwd, totalTraffic, isMobile),
+                                      logFileName("NEU_Monitor.log"),
+                                      logFile(logFileName, this)
 {
     openLogFile();
 
@@ -21,10 +22,10 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
 
     netctrl = new NetController(user, passwd, this); //passwd为解密后密码
     connect(netctrl, &NetController::sendLog, this, &MainTray::writeLog);
-    totalTraffic = settings.value("total traffic", 60).toInt();
     netctrl->setUsername(user);
     netctrl->setPassword(passwd);
     netctrl->setTotalTraffic(totalTraffic);
+    netctrl->setMobile(isMobile);
 
     writeLog(tr("Load username[") + user + tr("] traffic[") + QString::number(totalTraffic) + tr("]."));
 

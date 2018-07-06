@@ -35,10 +35,17 @@ private:
   QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction, *mobileAction;
   NetController *netctrl;
   QSettings settings;
+
+  QByteArray user, passwd;
+  int totalTraffic;
+  bool isMobile = false;
+
   OptionsWindow opWindow;
   QTimer *autoLoginTimer; //自动重连定时器
+
   QString logFileName;
   QFile logFile;
+
   QString olIconPath = tr(":/icons/favicon.ico");
   QString offIconPath = tr(":/icons/offline.ico");
 
@@ -55,8 +62,6 @@ private:
   void showAbout();                                               //显示关于窗口
   void setAutoStart(bool set);
 
-  QByteArray user, passwd;
-  int totalTraffic;
   int msgDur = 500;         //通知持续时间
   int checkInterval = 1000; //查询状态定时器周期
 
