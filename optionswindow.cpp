@@ -1,6 +1,6 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent) : QMainWindow(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, bool isMobile, QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(tr("选项"));
 
@@ -20,6 +20,10 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     passwordEdit->setText(pass);
     passwordEdit->setToolTip(tr("密码仅用于登陆"));
 
+    mobileCheck = new QCheckBox(tr("作为移动端登陆"), this);
+    mobileCheck->setChecked(isMobile);
+    mobileCheck->setToolTip(tr("实现PC多终端在线"));
+
     trafficSpin = new QSpinBox(this);
     trafficSpin->setValue(traffic);
     trafficSpin->setToolTip(tr("0为无限制"));
@@ -30,6 +34,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
     layout->addRow(trafficLabel, trafficSpin);
+    layout->addRow(mobileCheck);
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
@@ -52,7 +57,8 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     connect(saveButton, &QPushButton::clicked, this, [this]() {
         emit saveSettings(idEdit->text().toUtf8(),
                           passwordEdit->text().toUtf8(),
-                          trafficSpin->value());
+                          trafficSpin->value(),
+                          mobileCheck->isChecked());
     });
     connect(cancleButton, &QPushButton::clicked, this, &OptionsWindow::hide);
 }
