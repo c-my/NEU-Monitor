@@ -34,7 +34,6 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
     layout->addRow(trafficLabel, trafficSpin);
-    layout->addRow(mobileCheck);
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
