@@ -17,7 +17,7 @@ class OptionsWindow : public QMainWindow
 {
   Q_OBJECT
 public:
-  explicit OptionsWindow(QByteArray id, QByteArray pass, int traffic, bool isMobile, QWidget *parent = nullptr);
+  explicit OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent = nullptr);
 
 private:
   QTabWidget *tabWidget;
@@ -33,7 +33,7 @@ private:
   QLabel *trafficLabel;
 
 signals:
-  void saveSettings(QByteArray id, QByteArray pass, int traffic, bool isMobile);
+  void saveSettings(QByteArray id, QByteArray pass, int traffic);
 public slots:
 };
 

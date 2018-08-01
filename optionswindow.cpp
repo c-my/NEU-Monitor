@@ -1,6 +1,6 @@
 #include "optionswindow.h"
 
-OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, bool isMobile, QWidget *parent) : QMainWindow(parent)
+OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(tr("选项"));
 
@@ -20,9 +20,9 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, bool i
     passwordEdit->setText(pass);
     passwordEdit->setToolTip(tr("密码仅用于登陆"));
 
-    mobileCheck = new QCheckBox(tr("作为移动端登陆"), this);
-    mobileCheck->setChecked(isMobile);
-    mobileCheck->setToolTip(tr("实现PC多终端在线"));
+//    mobileCheck = new QCheckBox(tr("作为移动端登陆"), this);
+//    mobileCheck->setChecked(isMobile);
+//    mobileCheck->setToolTip(tr("实现PC多终端在线"));
 
     trafficSpin = new QSpinBox(this);
     trafficSpin->setValue(traffic);
@@ -57,8 +57,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, bool i
     connect(saveButton, &QPushButton::clicked, this, [this]() {
         emit saveSettings(idEdit->text().toUtf8(),
                           passwordEdit->text().toUtf8(),
-                          trafficSpin->value(),
-                          mobileCheck->isChecked());
+                          trafficSpin->value());
     });
     connect(cancleButton, &QPushButton::clicked, this, &OptionsWindow::hide);
 }
