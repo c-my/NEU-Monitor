@@ -33,12 +33,14 @@ private:
   QMenu *menu, *infoMenu, *settingsMenu;
   QAction *loginAction, *logoutAction, *autoLogin, *optionsAction, *aboutAction, *quitAction;
   QAction *mbAction, *timeAction, *balanceAction, *ipAction, *bootAction, *muteAction, *mobileAction;
+  QAction *forceLoginAction;
   NetController *netctrl;
   QSettings settings;
 
   QByteArray user, passwd;
   int totalTraffic;
   bool isMobile = false;
+  bool forceLogin = false;
 
   OptionsWindow opWindow;
   QTimer *autoLoginTimer; //自动重连定时器
@@ -69,7 +71,7 @@ signals:
   void exit();
 
 private slots:
-  void updateUserInfo(QByteArray id, QByteArray pass, int traffic, bool isMobile);
+  void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
   void handleState(NetController::State state);
   void handleInfo(QString mb, QString sec, QString balance, QString ip);
   void openLogFile();

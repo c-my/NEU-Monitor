@@ -11,7 +11,8 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
                                       passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray())),
                                       totalTraffic(settings.value("total traffic", 0).toInt()),
                                       isMobile(settings.value("isMobile", false).toBool()),
-                                      opWindow(user, passwd, totalTraffic, isMobile),
+                                      forceLogin(settings.value("forceLogin", false).toBool()),
+                                      opWindow(user, passwd, totalTraffic),
                                       logFileName("NEU_Monitor.log"),
                                       logFile(logFileName, this)
 {
@@ -55,6 +56,14 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     balanceAction = new QAction(tr("账户余额: "), this);
     ipAction = new QAction(tr("IP地址: "), this);
 
+    mobileAction = new QAction(tr("移动端登陆"), this);
+    mobileAction->setCheckable(true);
+    mobileAction->setToolTip(tr("假装自己是个手机"));
+
+    forceLoginAction = new QAction(tr("强制登陆"), this);
+    forceLoginAction->setCheckable(true);
+    forceLoginAction->setToolTip(tr("先断开已有的所有连接再登陆"));
+
     connect(ipAction, &QAction::triggered, this, [this]() {
         QStringList ipList = ipAction->text().split('\t');
         if (ipList.size() > 1)
@@ -71,14 +80,15 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     autoLogin->setCheckable(true);
     bootAction->setCheckable(true);
     muteAction->setCheckable(true);
-
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Login triggered."));
         isForceLogin = true;
         //        netctrl->sendLogoutRequest(true);
-        logoutAction->trigger();
+        if (forceLogin) {
+            logoutAction->trigger();
+        }
         hasWarned = false;
         netctrl->sendLoginRequest();
         isForceLogout = false;
@@ -107,16 +117,33 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     connect(aboutAction, &QAction::triggered, this, &MainTray::showAbout);
     connect(quitAction, &QAction::triggered, this, [this]() {
         writeLog(tr("Exit.\n\n"));
-        emit exit(); });
+        emit exit();
+    });
+
+    connect(mobileAction, &QAction::triggered, this, [this](bool set) {
+        writeLog(tr("Mobile model turn ") + tr(set? "[on].": "[off]."));
+        settings.setValue("isMobile", set);
+        isMobile = set;
+        netctrl->setMobile(set);
+    });
+
+    connect(forceLoginAction, &QAction::triggered, this, [this](bool set) {
+        writeLog(tr("Force Login turn ") + tr(set? "[on].": "[off]."));
+        settings.setValue("forceLogin", set);
+        forceLogin = set;
+    });
 
     autoLogin->setChecked(settings.value("isAutoLogin", true).toBool());
     bootAction->setChecked(settings.value("isOnBoot", false).toBool());
     muteAction->setChecked(settings.value("isMute", false).toBool());
+    mobileAction->setChecked(settings.value("isMobile", false).toBool());
 
     settingsMenu->setTitle(tr("设置"));
     settingsMenu->addAction(optionsAction);
     settingsMenu->addAction(muteAction);
     settingsMenu->addAction(bootAction);
+    settingsMenu->addAction(mobileAction);
+    settingsMenu->addAction(forceLoginAction);
 
     infoMenu->setTitle(tr("账户信息"));
     infoMenu->addAction(mbAction);
@@ -279,7 +306,7 @@ void MainTray::setAutoStart(bool set)
     {
         if (!muteAction->isChecked())
         {
-            showMessage(tr("设置失败"), tr("读写/home/.config/autostart/失败"), this->icon(), msgDur);
+            showMessage(tr("设置失败"), tr("读写/home/user/.config/autostart/失败"), this->icon(), msgDur);
             return;
         }
     }
@@ -318,7 +345,7 @@ void MainTray::openLogFile()
     logFile.close();
 }
 
-void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic, bool isMobile) //pass为未加密的密码
+void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic) //pass为未加密的密码
 {
     writeLog(tr("Set username[") + id + tr("]; Traffic: [") + QString::number(traffic) + tr("]."));
     logoutAction->trigger(); //注销当前via old info
@@ -335,7 +362,6 @@ void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic, bool 
     settings.setValue("id", id);
     settings.setValue("password", pass.toBase64());
     settings.setValue("total traffic", traffic);
-    settings.setValue("isMobile", isMobile);
 }
 
 void MainTray::handleState(NetController::State state)
