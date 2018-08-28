@@ -4,5 +4,7 @@
         <file>translations/qt_zh_CN.qm</file>
         <file>icons/favicon.ico</file>
         <file>icons/offline.ico</file>
+        <file>resource/SourceHanSansCN-Regular.otf</file>
+        <file>qt/etc/qt.conf</file>
     </qresource>
 </RCC>

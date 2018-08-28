@@ -15,6 +15,8 @@
 #include <QtGlobal>
 #include <QClipboard>
 #include <QStandardPaths>
+#include <QTextStream>
+#include <QDateTime>
 
 class MainTray : public QSystemTrayIcon
 {
