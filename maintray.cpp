@@ -209,8 +209,6 @@ void MainTray::showToolTip(NetController::State state)
     case NetController::WrongPass:
         tooltipString += tr("当前状态：密码错误");
         break;
-    default:
-        break;
     }
     tooltipString += tr("(") + (netctrl->getMobile() ? tr("Mobile") : tr("PC")) + tr(")");
     tooltipString += tr("\n自动登陆：");
@@ -424,12 +422,12 @@ void MainTray::handleState(NetController::State state)
 
 void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip)
 {
-    QString mbString = QString::number(byte.toDouble() / 1048576.0, 'f', 2);
+    QString mbString = QString::number(byte.toDouble() / 1000000.0, 'f', 2);
     QString gbString = QString::number(byte.toDouble() / 1000000000.0, 'f', 2);
     QString leftoverString = QString::number(totalTraffic - byte.toDouble() / 1000000000.0, 'f', 2);
     double totalSec = sec.toDouble();
     double hour = (totalSec / 3600);
-    int min = ((totalSec - hour * 3600) / 60);
+    int min = int((totalSec - hour * 3600) / 60);
     QString second = QString::number(totalSec - hour * 3600 - min * 60);
     mbAction->setText(tr("已用流量:\t") + mbString + tr(" M"));
     timeAction->setText(tr("已用时长:\t") + QString::number(hour, 'f', 2) + tr(" 小时") /*+ ":" +QString::number(min) + ":" + second*/);
@@ -438,7 +436,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     if (!hasWarned && totalTraffic > 0)
     {
         hasWarned = true;
-        if (byte.toDouble() / 1048576.0 > totalTraffic * 1024)
+        if (byte.toDouble() / 1000000.0 > totalTraffic * 1024)
         { //流量已超
             trafficstate = Over;
             if (!muteAction->isChecked())
@@ -446,7 +444,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
                     showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
                 });
         }
-        else if (byte.toDouble() / 1048576.0 + 5000 > totalTraffic * 1024)
+        else if (byte.toDouble() / 1000000.0 + 5000 > totalTraffic * 1024)
         { //流量将超
             trafficstate = Nearly;
             if (!muteAction->isChecked())
