@@ -1,34 +1,28 @@
 #include "maintray.h"
 
 MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
-                                      //初始化menu
-                                      menu(new QMenu()),
-                                      infoMenu(new QMenu()),
-                                      settingsMenu(new QMenu()),
-                                      //初始化settings
-                                      settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
-                                      user(settings.value("id", "").toByteArray()),
-                                      passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray())),
-                                      totalTraffic(settings.value("total traffic", 0).toInt()),
-                                      isMobile(settings.value("isMobile", false).toBool()),
-                                      forceLogin(settings.value("forceLogin", false).toBool()),
-                                      opWindow(user, passwd, totalTraffic),
-                                      logFileName("NEU_Monitor.log"),
-                                      logFile(logFileName, this)
+    //初始化menu
+    menu(new QMenu()),
+    infoMenu(new QMenu()),
+    settingsMenu(new QMenu()),
+    //初始化settings
+    settings(QSettings::IniFormat, QSettings::UserScope, "Cai.MY", "NEU-Monitor"),
+    user(settings.value("id", "").toByteArray()),
+    passwd(QByteArray::fromBase64(settings.value("password", "").toByteArray())),
+    totalTraffic(settings.value("total traffic", 0).toInt()),
+    isMobile(settings.value("isMobile", false).toBool()),
+    forceLogin(settings.value("forceLogin", false).toBool()),
+    opWindow(user, passwd, totalTraffic)
 {
-    openLogFile();
 
     opWindow.hide();
     setIcon(QIcon(olIconPath));
 
     netctrl = new NetController(user, passwd, this); //passwd为解密后密码
-    connect(netctrl, &NetController::sendLog, this, &MainTray::writeLog);
     netctrl->setUsername(user);
     netctrl->setPassword(passwd);
     netctrl->setTotalTraffic(totalTraffic);
     netctrl->setMobile(isMobile);
-
-    writeLog(tr("Load username[") + user + tr("] traffic[") + QString::number(totalTraffic) + tr("]."));
 
     connect(&opWindow, &OptionsWindow::saveSettings, this, &MainTray::updateUserInfo);
     //连接controller状态改变信号
@@ -83,7 +77,6 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     muteAction->setToolTip(tr("勿扰模式下不会发出通知"));
 
     connect(loginAction, &QAction::triggered, this, [this]() {
-        writeLog(tr("Login triggered."));
         isForceLogin = true;
         //        netctrl->sendLogoutRequest(true);
         if (forceLogin) {
@@ -94,41 +87,34 @@ MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
         isForceLogout = false;
     });
     connect(logoutAction, &QAction::triggered, this, [this]() {
-        writeLog(tr("Logout triggered."));
         netctrl->sendLogoutRequest(currentState != NetController::Online); //若不在线则断开全部链接
         isForceLogout = true;
     });
     connect(autoLogin, &QAction::toggled, this, [this](bool set) {
-        writeLog(tr("Autologin turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isAutoLogin", set);
         isForceLogout = false;
         showToolTip(currentState);
     });
     connect(muteAction, &QAction::toggled, this, [this](bool set) {
-        writeLog(tr("Mute mode turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isMute", set);
     });
     connect(bootAction, &QAction::toggled, this, [this](bool set) {
-        writeLog(tr("Boot with system turn ") + (set ? tr("[on].") : tr("[off].")));
         settings.setValue("isOnBoot", set);
         setAutoStart(set);
     });
     connect(optionsAction, &QAction::triggered, this, [this]() { showOptions(); });
     connect(aboutAction, &QAction::triggered, this, &MainTray::showAbout);
     connect(quitAction, &QAction::triggered, this, [this]() {
-        writeLog(tr("Exit.\n\n"));
         emit exit();
     });
 
     connect(mobileAction, &QAction::triggered, this, [this](bool set) {
-        writeLog(tr("Mobile model turn ") + tr(set? "[on].": "[off]."));
         settings.setValue("isMobile", set);
         isMobile = set;
         netctrl->setMobile(set);
     });
 
     connect(forceLoginAction, &QAction::triggered, this, [this](bool set) {
-        writeLog(tr("Force Login turn ") + tr(set? "[on].": "[off]."));
         settings.setValue("forceLogin", set);
         forceLogin = set;
     });
@@ -183,7 +169,6 @@ MainTray::~MainTray()
     delete menu;
     delete infoMenu;
     delete autoLoginTimer;
-    logFile.close();
 }
 
 void MainTray::showToolTip(NetController::State state)
@@ -208,8 +193,6 @@ void MainTray::showToolTip(NetController::State state)
         break;
     case NetController::WrongPass:
         tooltipString += tr("当前状态：密码错误");
-        break;
-    default:
         break;
     }
     tooltipString += tr("(") + (netctrl->getMobile() ? tr("Mobile") : tr("PC")) + tr(")");
@@ -238,7 +221,6 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
     {
     case QSystemTrayIcon::DoubleClick:
     case QSystemTrayIcon::MiddleClick:
-        writeLog(tr("Double click TrayIcon."));
         if (currentState == NetController::Offline)
         {
             loginAction->trigger();
@@ -258,22 +240,23 @@ void MainTray::handleActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainTray::showOptions()
 {
-    writeLog(tr("Open options window."));
     opWindow.show();
 }
 
 void MainTray::showAbout()
 {
-    writeLog(tr("Open about window."));
     QMessageBox *aboutWindow = new QMessageBox();
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                             "<h3>Version: 1.4.1</h3>"
-                            "<p>Based on Qt 5.11.1 (MinGW 5.3.0, 32bit)</p>"
-                            "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
-                            "Email: <address>"
-                            "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor-v1.4.1 Feedback\">Cai.MY</a>"
-                            "</address>"));
+                            "<p>Based on Qt ")+getQtVersion()+ tr("(GCC ")+
+                         getGccVersion()+
+                         tr(
+                             ")</p>"
+                             "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
+                             "Email: <address>"
+                             "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor-v1.4.1 Feedback\">Cai.MY</a>"
+                             "</address>"));
     aboutWindow->setAttribute(Qt::WA_DeleteOnClose);
     aboutWindow->setModal(false);
     aboutWindow->show();
@@ -330,24 +313,31 @@ void MainTray::setAutoStart(bool set)
 #endif
 }
 
-void MainTray::openLogFile()
+QString MainTray::getQtVersion()
 {
-    if (!logFile.open(QIODevice::Append | QIODevice::Text))
-    {
-        if (!muteAction->isChecked())
-        {
-            showMessage(tr("警告"), tr("日志文件打开失败"));
-        }
-        //        return;
-    }
-    writeLog(tr("\n=================================================="), false);
-    writeLog(tr("Open logfile [") + logFile.fileName() + tr("] successfully."));
-    logFile.close();
+    return QString::number(QT_VERSION_MAJOR)+tr(".")+QString::number(QT_VERSION_MINOR)+tr(".")+QString::number(QT_VERSION_PATCH);
 }
+
+QString MainTray::getGccVersion()
+{
+    return QString::number(__GNUC__)+tr(".")+QString::number(__GNUC_MINOR__)+tr(".")+QString::number(__GNUC_PATCHLEVEL__);
+}
+
+//void MainTray::openLogFile()
+//{
+//    if (!logFile.open(QIODevice::Append | QIODevice::Text))
+//    {
+//        if (!muteAction->isChecked())
+//        {
+//            showMessage(tr("警告"), tr("日志文件打开失败"));
+//        }
+//        //        return;
+//    }
+//    logFile.close();
+//}
 
 void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic) //pass为未加密的密码
 {
-    writeLog(tr("Set username[") + id + tr("]; Traffic: [") + QString::number(traffic) + tr("]."));
     logoutAction->trigger(); //注销当前via old info
     netctrl->setUsername(id);
     netctrl->setPassword(pass);
@@ -371,7 +361,6 @@ void MainTray::handleState(NetController::State state)
         switch (state)
         {
         case NetController::Online:
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             isForceLogin = false;
             setIcon(QIcon(olIconPath));
             if (!muteAction->isChecked())
@@ -381,7 +370,6 @@ void MainTray::handleState(NetController::State state)
         case NetController::Offline:
             if (currentState == NetController::WrongPass || currentState == NetController::Owed)
                 return;
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(offIconPath));
             if (!muteAction->isChecked())
                 showMessage(tr("网络已断开"), tr("校园网已注销"), this->icon(), msgDur);
@@ -394,14 +382,12 @@ void MainTray::handleState(NetController::State state)
             currentState = state;
             break;
         case NetController::Disconnected:
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(offIconPath));
             if (!muteAction->isChecked())
                 showMessage(tr("网络已断开"), tr("无法连接至校园网"), this->icon(), msgDur);
             currentState = state;
             break;
         case NetController::WrongPass:
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             setIcon(QIcon(offIconPath));
             if (!muteAction->isChecked())
                 showMessage(tr("登陆失败"), tr("密码错误"), this->icon(), msgDur);
@@ -409,7 +395,6 @@ void MainTray::handleState(NetController::State state)
             break;
         case NetController::Owed:
             setIcon(QIcon(offIconPath));
-            writeLog(tr("Old state: [") + QString::number(currentState) + tr("]; New state: [") + QString::number(state) + tr("]."));
             if (!muteAction->isChecked())
                 showMessage(tr("登陆失败"), tr("已欠费"), this->icon(), msgDur);
             currentState = state;
@@ -417,7 +402,6 @@ void MainTray::handleState(NetController::State state)
         default:
             break;
         }
-        writeLog(tr("State change to [") + QString::number(currentState) + tr("]."));
         showToolTip(state);
     }
 }
@@ -429,7 +413,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     QString leftoverString = QString::number(totalTraffic - byte.toDouble() / 1000000000.0, 'f', 2);
     double totalSec = sec.toDouble();
     double hour = (totalSec / 3600);
-    int min = ((totalSec - hour * 3600) / 60);
+    int min = int((totalSec - hour * 3600) / 60);
     QString second = QString::number(totalSec - hour * 3600 - min * 60);
     mbAction->setText(tr("已用流量:\t") + mbString + tr(" M"));
     timeAction->setText(tr("已用时长:\t") + QString::number(hour, 'f', 2) + tr(" 小时") /*+ ":" +QString::number(min) + ":" + second*/);
@@ -458,14 +442,14 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     }
 }
 
-void MainTray::writeLog(QString content, bool timeStamp)
-{
-    if (!logFile.isOpen())
-        logFile.open(QIODevice::Append | QIODevice::Text);
-    if (timeStamp)
-        logFile.write(QDateTime::currentDateTime().toString("[yyyy.MM.dd hh:mm:ss] ").toUtf8());
-    logFile.write(content.toUtf8());
-    logFile.write(tr("\n").toUtf8());
-    //        qDebug()<<"Write log"<<content;
-    logFile.close();
-}
+//void MainTray::writeLog(QString content, bool timeStamp)
+//{
+//    if (!logFile.isOpen())
+//        logFile.open(QIODevice::Append | QIODevice::Text);
+//    if (timeStamp)
+//        logFile.write(QDateTime::currentDateTime().toString("[yyyy.MM.dd hh:mm:ss] ").toUtf8());
+//    logFile.write(content.toUtf8());
+//    logFile.write(tr("\n").toUtf8());
+//    //        qDebug()<<"Write log"<<content;
+//    logFile.close();
+//}

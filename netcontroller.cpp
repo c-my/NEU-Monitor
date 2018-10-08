@@ -46,8 +46,6 @@ void NetController::sendCheckRequest()
 
 void NetController::sendLoginRequest()
 {
-    sendLog(tr("Send login request. [") + username + tr("]"));
-
     QByteArray loginParam;
     loginParam.append("action=login&");
     loginParam.append("nas_ip=&");
@@ -74,8 +72,6 @@ void NetController::sendLoginRequest()
 
 void NetController::sendLogoutRequest(bool isAll)
 {
-    sendLog(tr("Send logout request. [") + username + tr("]"));
-
     QByteArray logoutParam;
     logoutParam.append("action=logout&");
     logoutParam.append("ajax=1&");
@@ -129,17 +125,14 @@ void NetController::handleResponse(QNetworkReply *reply)
         QString loginPage(reply->readAll());
         if (loginPage.contains(QString("已欠费")))
         { //欠费
-            sendLog(tr("Get [Owed] response."));
             emit sendState(Owed);
         }
         else if (loginPage.contains("Password is error"))
         { //密码错误
-            sendLog(tr("Get [Wrong Password] response."));
             emit sendState(WrongPass);
         }
         else if (loginPage.contains("网络已连接"))
         { //登陆成功
-            sendLog(tr("Get [Login success] response."));
             emit sendState(Online);
         }
     }

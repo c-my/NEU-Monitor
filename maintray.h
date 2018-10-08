@@ -47,9 +47,6 @@ private:
   OptionsWindow opWindow;
   QTimer *autoLoginTimer; //自动重连定时器
 
-  QString logFileName;
-  QFile logFile;
-
   QString olIconPath = tr(":/icons/favicon.ico");
   QString offIconPath = tr(":/icons/offline.ico");
 
@@ -69,6 +66,8 @@ private:
   int msgDur = 500;         //通知持续时间
   int checkInterval = 1000; //查询状态定时器周期
 
+  inline QString getQtVersion();
+  inline QString getGccVersion();
 signals:
   void exit();
 
@@ -76,8 +75,6 @@ private slots:
   void updateUserInfo(QByteArray id, QByteArray pass, int traffic);
   void handleState(NetController::State state);
   void handleInfo(QString mb, QString sec, QString balance, QString ip);
-  void openLogFile();
-  void writeLog(QString content, bool timeStamp = true);
 };
 
 #endif // MAINTRAY_H
