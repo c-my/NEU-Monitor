@@ -408,7 +408,7 @@ void MainTray::handleState(NetController::State state)
 
 void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip)
 {
-    QString mbString = QString::number(byte.toDouble() / 1048576.0, 'f', 2);
+    QString mbString = QString::number(byte.toDouble() / 1000000.0, 'f', 2);
     QString gbString = QString::number(byte.toDouble() / 1000000000.0, 'f', 2);
     QString leftoverString = QString::number(totalTraffic - byte.toDouble() / 1000000000.0, 'f', 2);
     double totalSec = sec.toDouble();
@@ -422,7 +422,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
     if (!hasWarned && totalTraffic > 0)
     {
         hasWarned = true;
-        if (byte.toDouble() / 1048576.0 > totalTraffic * 1024)
+        if (byte.toDouble() / 1000000.0 > totalTraffic * 1024)
         { //流量已超
             trafficstate = Over;
             if (!muteAction->isChecked())
@@ -430,7 +430,7 @@ void MainTray::handleInfo(QString byte, QString sec, QString balance, QString ip
                     showMessage(tr("流量警告"), tr("本月流量已超"), QSystemTrayIcon::Warning);
                 });
         }
-        else if (byte.toDouble() / 1048576.0 + 5000 > totalTraffic * 1024)
+        else if (byte.toDouble() / 1000000.0 + 5000 > totalTraffic * 1024)
         { //流量将超
             trafficstate = Nearly;
             if (!muteAction->isChecked())

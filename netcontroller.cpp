@@ -11,7 +11,13 @@ NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) 
     desktopRequest.setRawHeader("Cache-Control", "max-age=0");
     desktopRequest.setRawHeader("Origin", "http://ipgw.neu.edu.cn");
     desktopRequest.setRawHeader("Upgrade-Insecure-Requests", "1");
+#ifdef Q_OS_LINUX
+    desktopRequest.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
+#endif
+
+#ifdef Q_OS_WIN32
     desktopRequest.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36");
+#endif
     desktopRequest.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
     desktopRequest.setRawHeader("Referer", "http://ipgw.neu.edu.cn/srun_portal_pc.php?ac_id=1&");
     desktopRequest.setRawHeader("Accept-Encoding", "gzip, deflate");
