@@ -26,16 +26,22 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
 //    mobileCheck->setChecked(isMobile);
 //    mobileCheck->setToolTip(tr("实现PC多终端在线"));
 
-    trafficSpin = new QSpinBox(this);
-    trafficSpin->setValue(traffic);
-    trafficSpin->setToolTip(tr("0为无限制"));
+    trafficBox = new QComboBox(this);
+    trafficBox->setEditable(true);
+    trafficBox->setCurrentText(QString::number(traffic));
+    trafficBox->setValidator(new QIntValidator(0, INT_MAX));
+    trafficBox->setToolTip(tr("0为无限制"));
+    trafficBox->addItem(tr("5"));
+    trafficBox->addItem(tr("25"));
+    trafficBox->addItem(tr("60"));
+
 
     trafficLabel = new QLabel(tr("流量(G)"), this);
     trafficLabel->setToolTip(tr("在流量将要用尽时进行提醒"));
 
     layout->addRow(tr("用户名"), idEdit);
     layout->addRow(tr("密码"), passwordEdit);
-    layout->addRow(trafficLabel, trafficSpin);
+    layout->addRow(trafficLabel, trafficBox);
     layout->setSpacing(20);
 
     saveButton = new QPushButton("确定", this);
@@ -58,7 +64,7 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
     connect(saveButton, &QPushButton::clicked, this, [this]() {
         emit saveSettings(idEdit->text().toUtf8(),
                           passwordEdit->text().toUtf8(),
-                          trafficSpin->value());
+                          trafficBox->currentText().toInt());
     });
     connect(cancleButton, &QPushButton::clicked, this, &OptionsWindow::hide);
 }

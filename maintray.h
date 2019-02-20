@@ -71,7 +71,7 @@ private:
   int checkInterval = 1000; //查询状态定时器周期
 
   inline QString getQtVersion();
-  inline QString getGccVersion();
+  inline QString getCompilerVersion();
 signals:
   void exit();
 

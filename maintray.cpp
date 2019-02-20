@@ -250,11 +250,12 @@ void MainTray::showAbout()
     aboutWindow->setStandardButtons(QMessageBox::Ok);
     aboutWindow->setText(tr("<h1>NEU-Monitor</h1>"
                             "<h3>Version: 1.4.1</h3>"
-                            "<p>Based on Qt ")+getQtVersion()+ tr("(GCC ")+
-                         getGccVersion()+
-                         tr(
+                            "<p>Based on Qt ")+getQtVersion() + tr("(") +
+                            getCompilerVersion() +
+                            tr(
                              ")</p>"
-                             "Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
+                             "Configuration file path: <a href = \"") + settings.fileName() +
+                             tr("\">") + settings.fileName() + tr("</a><br/>Source Code: <a href=\"https://github.com/c-my/NEU-Monitor\">https://github.com/c-my/NEU-Monitor</a><br/>"
                              "Email: <address>"
                              "<a href=\"mailto:cmy1113@yeah.net?subject=Neu-Monitor-v1.4.1 Feedback\">Cai.MY</a>"
                              "</address>"));
@@ -319,24 +320,16 @@ QString MainTray::getQtVersion()
     return QString::number(QT_VERSION_MAJOR)+tr(".")+QString::number(QT_VERSION_MINOR)+tr(".")+QString::number(QT_VERSION_PATCH);
 }
 
-QString MainTray::getGccVersion()
+QString MainTray::getCompilerVersion()
 {
-    return *(new QString());
-//    return QString::number(__GNUC__)+tr(".")+QString::number(__GNUC_MINOR__)+tr(".")+QString::number(__GNUC_PATCHLEVEL__);
-}
+#ifdef __GNUC__
+    return tr("GCC ")QString::number(__GNUC__)+tr(".")+QString::number(__GNUC_MINOR__)+tr(".")+QString::number(__GNUC_PATCHLEVEL__);
+#endif
+#ifdef _MSC_VER
+    return tr("MSVC ") + QString::number(_MSC_FULL_VER);
+#endif
 
-//void MainTray::openLogFile()
-//{
-//    if (!logFile.open(QIODevice::Append | QIODevice::Text))
-//    {
-//        if (!muteAction->isChecked())
-//        {
-//            showMessage(tr("警告"), tr("日志文件打开失败"));
-//        }
-//        //        return;
-//    }
-//    logFile.close();
-//}
+}
 
 void MainTray::updateUserInfo(QByteArray id, QByteArray pass, int traffic) //pass为未加密的密码
 {
