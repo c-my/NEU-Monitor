@@ -1,4 +1,4 @@
-#include "optionswindow.h"
+﻿#include "optionswindow.h"
 
 OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidget *parent) : QMainWindow(parent)
 {
@@ -13,12 +13,14 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
 
     idEdit = new QLineEdit(this);
     idEdit->setText(id);
+    idEdit->setPlaceholderText(tr("学(工)号"));
 
     passwordEdit = new QLineEdit(this);
     passwordEdit->setEchoMode(QLineEdit::Password);
     passwordEdit->setContextMenuPolicy(Qt::NoContextMenu);
     passwordEdit->setText(pass);
     passwordEdit->setToolTip(tr("密码仅用于登陆"));
+    passwordEdit->setPlaceholderText(tr("请输入密码"));
 
 //    mobileCheck = new QCheckBox(tr("作为移动端登陆"), this);
 //    mobileCheck->setChecked(isMobile);

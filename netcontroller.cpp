@@ -1,4 +1,4 @@
-#include "netcontroller.h"
+﻿#include "netcontroller.h"
 
 NetController::NetController(QByteArray id, QByteArray passwd, QObject *parent) : QObject(parent),
                                                                                   username(id), password(passwd), manager(this)

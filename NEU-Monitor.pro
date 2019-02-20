@@ -39,3 +39,4 @@ RESOURCES += \
     resource.qrc
 
 RC_ICONS = icons\favicon.ico
+

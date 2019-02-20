@@ -1,4 +1,4 @@
-#ifndef NETCONTROLLER_H
+﻿#ifndef NETCONTROLLER_H
 #define NETCONTROLLER_H
 
 #include <QObject>

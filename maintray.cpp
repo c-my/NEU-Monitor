@@ -1,4 +1,5 @@
-#include "maintray.h"
+﻿#include "maintray.h"
+
 
 MainTray::MainTray(QObject *parent) : QSystemTrayIcon(parent),
     //初始化menu
@@ -320,7 +321,8 @@ QString MainTray::getQtVersion()
 
 QString MainTray::getGccVersion()
 {
-    return QString::number(__GNUC__)+tr(".")+QString::number(__GNUC_MINOR__)+tr(".")+QString::number(__GNUC_PATCHLEVEL__);
+    return *(new QString());
+//    return QString::number(__GNUC__)+tr(".")+QString::number(__GNUC_MINOR__)+tr(".")+QString::number(__GNUC_PATCHLEVEL__);
 }
 
 //void MainTray::openLogFile()
