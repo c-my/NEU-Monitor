@@ -28,12 +28,13 @@ OptionsWindow::OptionsWindow(QByteArray id, QByteArray pass, int traffic, QWidge
 
     trafficBox = new QComboBox(this);
     trafficBox->setEditable(true);
-    trafficBox->setCurrentText(QString::number(traffic));
     trafficBox->setValidator(new QIntValidator(0, INT_MAX));
     trafficBox->setToolTip(tr("0为无限制"));
     trafficBox->addItem(tr("5"));
     trafficBox->addItem(tr("25"));
     trafficBox->addItem(tr("60"));
+    trafficBox->setCurrentText(QString::number(traffic));
+
 
 
     trafficLabel = new QLabel(tr("流量(G)"), this);
